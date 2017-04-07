@@ -23,6 +23,8 @@ public class Client {
 		BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 		PrintWriter output = new PrintWriter(socket.getOutputStream(), true);
 		BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
+		InputStream inStream = null;
+		OutputStream outStream = null;
 		
 		System.out.println("Signin (" + SIGNOUT + "), Signup (" + SIGNUP + ")");
 		String userInput;
@@ -54,41 +56,45 @@ public class Client {
 			output.println(password);
 			String credentialCheckMsg = input.readLine();
 			if(credentialCheckMsg.equals(ACCESSGRANTED)){
-				System.out.println ("Valid credentials, enter filenames (\"exit\" to quit)");
+				System.out.println ("Valid credentials enter filenames (\"exit\" to quit)");
 				
 				while ((userInput = stdIn.readLine()) != null){
+					
+			         // end loop
+			         if (userInput.equals("exit")){
+			        	 System.out.println("Exiting...");
+			        	 break;
+			         }
+			         System.out.println("Requesting file: " + userInput);   
+					
 					output.println(userInput); // send the name of the file
 					String fileFound = input.readLine();
-					
+					System.out.println("file has been found: " + fileFound); // debug
 					if(fileFound.equals(FILEFOUND)){
 						Integer lengthOfFile = Integer.parseInt(input.readLine());
+						System.out.println("Length of file :" + lengthOfFile + " bytes" );
 						// Receive the file 
-				        InputStream in = socket.getInputStream();
+				        inStream = socket.getInputStream();
 				        System.out.println("Reciving file: " + userInput);
-				        OutputStream out = new FileOutputStream("./" + userInput);
+				        outStream = new FileOutputStream("./" + userInput);
 				        
 				        byte[] fileBytes = new byte[lengthOfFile];
 				        
-				        int byteCount;
-				        while((byteCount = in.read(fileBytes)) > 0){
-				        	out.write(fileBytes, 0, byteCount);
+				        int byteCount = 0;
+				        while(byteCount < lengthOfFile && (byteCount = inStream.read(fileBytes)) > 0){
+				        	System.out.println("Current bytecount: " + byteCount); // debug
+				        	outStream.write(fileBytes, 0, byteCount);
 				        }
-				        out.close();
-				        in.close();
+				        System.out.println("File "+ userInput +" has been recived");
 				        
 					}else if(fileFound.equals(FILENOTFOUND)){
-						System.out.println("Sorry file not found.");
+						System.out.println("Sorry file not found");
 					}else{
 						System.out.println("Protocal error, exiting.");
 						break;
 					}
 					
-	
-		         // end loop
-		         if (userInput.equals("exit"))
-		             break;
-	
-			    System.out.println("echo: " + input.readLine());
+					System.out.println ("Enter filenames (\"exit\" to quit)");
 				}
 		   }else if(credentialCheckMsg.equals(ACCESSDENIED)){
 			   System.out.println("Invalid cedentials, exiting.");
@@ -96,7 +102,11 @@ public class Client {
 			   System.out.println("Protocal error, exiting.");
 		   }
 		}
-
+		if(inStream != null)
+			inStream.close();
+		if(outStream != null)
+			outStream.close();
+		
 		output.close();
 		input.close();
 		stdIn.close();

@@ -113,9 +113,11 @@ public class Server extends Thread{
 		try{
 		PrintWriter output = new PrintWriter(socket.getOutputStream(), true); 
 		BufferedReader input = new BufferedReader(new InputStreamReader( socket.getInputStream()));
-		String inputLine;
+		OutputStream outputStream = null;
 		
-		if(input.readLine().equals(SIGNUP)){
+		String inputLine;
+		String logInOption = input.readLine();
+		if(logInOption.equals(SIGNUP)){
 			System.out.println("User signing up");
 			
 			String userName = input.readLine();
@@ -126,7 +128,7 @@ public class Server extends Thread{
 			System.out.println("Hashed password: " + hashedPW);
 			writeToShadow(userName,hashedPW);
 			
-		}else if(input.readLine().equals(SIGNOUT)){
+		}else if(logInOption.equals(SIGNOUT)){
 			System.out.println("User signing in");
 			
 			String userName = input.readLine();
@@ -139,7 +141,14 @@ public class Server extends Thread{
 				System.out.println("Valid credentials");
 				output.println(ACCESSGRANTED);
 		        while ((inputLine = input.readLine()) != null) { 
+		            if (inputLine.equals("exit")) {
+		            	System.out.println("Client exiting now");
+		            	break;
+		            }
+		                 
 		            System.out.println ("File requested: " + inputLine); 
+		            
+		            
 		            File file = retriveFile(inputLine);
 		            if(file != null){ // file exists sent it
 		            	output.println(FILEFOUND);
@@ -147,39 +156,40 @@ public class Server extends Thread{
 		            	// write the file to the socket
 		            	byte[] fileByteArray = new byte [(int) file.length()];
 		            	FileInputStream fileInputStream = new FileInputStream(file);
-		            	OutputStream outputStream = socket.getOutputStream();
+		            	outputStream = socket.getOutputStream();
 		            	int numBytes;
 		            	while((numBytes = fileInputStream.read(fileByteArray)) > 0){
 		            		outputStream.write(fileByteArray,0,numBytes);
 		            	}
-		            	outputStream.close();
-		            	fileInputStream.close();
+		            	System.out.println("file has been sent");
 		            	
 		            }else{ // file does not exits
 		            	output.println(FILENOTFOUND);
 		            	
 		            }
-		            output.println(inputLine); 
 
-		            if (inputLine.equals("exit")) 
-		                break; 
 		        } 
+		        System.out.println("exited while loop"); // debug 
 			}else{
 				System.out.println("Invalid credentials");
 				output.println(ACCESSDENIED);
 			}
 
 		}else{
-			System.out.println("Procal Error");
+			System.out.println("Protocal Error");
 		}
+		
+		if(outputStream != null)
+			outputStream.close();
 		
         output.close(); 
         input.close(); 
         socket.close();
 		
 		}catch(IOException e){
-	         System.err.println("Problem with Communication Server");
-	         System.exit(1); 
+			e.printStackTrace();
+	        System.err.println("Problem with Communication Server");
+	        System.exit(1); 
 		}
 
 	}

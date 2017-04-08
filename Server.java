@@ -167,7 +167,6 @@ public class Server extends Thread{
 		            	output.println(FILENOTFOUND);
 		            	
 		            }
-
 		        } 
 		        System.out.println("exited while loop"); // debug 
 			}else{

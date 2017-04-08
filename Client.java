@@ -6,6 +6,10 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.security.SecureRandom;
+
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
 
 public class Client {
 	private static final Integer COMSPORT = 16000;
@@ -17,6 +21,19 @@ public class Client {
 	private static final String FILEFOUND = "F";
 	private static final String FILENOTFOUND = "N";
 			
+	public static SecretKey genKey(){
+		KeyGenerator keyGen = null;
+		try{
+			keyGen = KeyGenerator.getInstance("AES");
+		}catch(Exception e){
+			e.printStackTrace();
+			return null;
+		}
+		SecureRandom random = new SecureRandom(); // cryptograph. secure random 
+		keyGen.init(random); 
+		SecretKey secretKey = keyGen.generateKey();
+		return secretKey;
+	}
 	
 	public static void main(String[] args) throws IOException {
 		Socket socket = new Socket(SERVERADDRESS, COMSPORT);

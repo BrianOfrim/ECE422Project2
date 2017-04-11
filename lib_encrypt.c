@@ -29,15 +29,24 @@ JNIEXPORT jbyteArray JNICALL Java_Encryption_encrypt
         exit(0);
     }
     int * keyarr = (int*) myCopyKeys;
-    int * dataarr = (int*) myCopyData;
+    int * datarr = (int*) myCopyData;
     printf("key 0: %d\n",keyarr[0]);
     printf("key 1: %d\n",keyarr[1]);
     printf("key 2: %d\n",keyarr[2]);
     printf("key 3: %d\n",keyarr[3]);
 
+    int i = 0;
+    int numInts = lenData/4;
+    printf("number of ints: %d\n",lenData);
+    for(i = 0; i < lenData/2;i++){
+        printf("current i val: %d\n", i);
+        encrypt(&datarr[i*2] , keyarr);
+
+    }
+
 
 	
-
+    return myCopyData;
 
 }
 

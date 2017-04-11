@@ -25,7 +25,7 @@ public class EncryptionTester {
 				        (byte)0x20, (byte)0xB4, (byte)0x9D, (byte)0xE4,
 				        (byte)0x33, (byte)0x6C, (byte)0x38, (byte)0x0D};
 		Encryption en = new Encryption();
-		en.encrypt(data, key);
+		byte[] encryptedBytes =en.encrypt(data, key);
 	}
 
 }

@@ -1,4 +1,4 @@
 
 public class Encryption {
-	public native int[] encrypt(byte[] data,byte[] key);
+	public native byte[] encrypt(byte[] data,byte[] key);
 }

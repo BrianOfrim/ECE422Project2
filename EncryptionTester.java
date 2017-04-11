@@ -14,13 +14,22 @@ public class EncryptionTester {
 		int datalen = str.getBytes().length;
 		System.out.println("Original Data len:");
 		System.out.println(datalen);
-		byte[] data = new byte[datalen + (8 - (datalen % 8))];
+		int numBytesToSend = datalen + (8 - (datalen % 8));
+		byte[] tempData = str.getBytes();
+		byte[] data = new byte[numBytesToSend];
+		for(int i = 0; i < numBytesToSend; i ++){
+			if(i < datalen){
+				data[i] = tempData[i];
+			}else{
+				data[i] = (byte)0x00;
+			}
+		}
 		data = str.getBytes();
 		System.out.println("The data");
 		System.out.println(Arrays.toString(data));
 		data = str.getBytes();
 		System.out.println("Spaces");
-		System.out.println(" ".getBytes());
+		System.out.println(Arrays.toString(" ".getBytes()));
 		System.out.println("Data size: ");
 		System.out.println(data.length);
 		//need to pad file with spaces if nessasary

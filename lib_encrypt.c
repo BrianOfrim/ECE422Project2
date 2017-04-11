@@ -45,7 +45,7 @@ JNIEXPORT jbyteArray JNICALL Java_Encryption_encrypt
     }
 
     jbyteArray returnByteArray = (*env)-> NewByteArray(env, lenData);
-    (*env)->SetIntArrayRegion(env, returnByteArray,0, lenData,myCopyData);
+    (*env)->SetByteArrayRegion(env, returnByteArray,0, lenData,myCopyData);
 
 	
     return (jbyteArray) returnByteArray;

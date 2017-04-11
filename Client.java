@@ -301,7 +301,8 @@ public class Client {
 			userInput = stdIn.readLine();
 			
 			if(userInput.equals("U")){
-				output.println("U");
+				//output.println("U");
+				sendString("U",outStream,output);
 				System.out.println("Username: ");
 				String userName =  stdIn.readLine();
 				System.out.println("Password: ");
@@ -317,7 +318,7 @@ public class Client {
 				
 				
 			}else if(userInput.equals("I")){
-				output.println("I");
+				sendString("I",outStream,output);
 				System.out.println("Username: ");
 				String userName =  stdIn.readLine();
 				output.println(userName);

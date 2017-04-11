@@ -350,7 +350,7 @@ public class Server extends Thread{
 		String s = readString(inStream,input);
 		System.out.println("Test message: " + s + "|");
         
-		String logInOption = input.readLine();
+		String logInOption = readString(inStream,input);
 		if(logInOption.equals(SIGNUP)){
 			System.out.println("User signing up");
 			

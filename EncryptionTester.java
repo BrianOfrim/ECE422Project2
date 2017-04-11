@@ -18,12 +18,14 @@ public class EncryptionTester {
 		data = str.getBytes();
 		System.out.println("Spaces");
 		System.out.println(" ".getBytes());
+		System.out.println("Data size: ");
+		System.out.println(data.length);
 		//need to pad file with spaces if nessasary
 		
 		byte[] key = {(byte)0xF4, (byte)0x88, (byte)0xFD, (byte)0x58,
-				        (byte)0x4E, (byte)0x49, (byte)0xDB, (byte)0xCD,
-				        (byte)0x20, (byte)0xB4, (byte)0x9D, (byte)0xE4,
-				        (byte)0x33, (byte)0x6C, (byte)0x38, (byte)0x0D};
+				      (byte)0x4E, (byte)0x49, (byte)0xDB, (byte)0xCD,
+				      (byte)0x20, (byte)0xB4, (byte)0x9D, (byte)0xE4,
+				      (byte)0x33, (byte)0x6C, (byte)0x38, (byte)0x0D};
 		Encryption en = new Encryption();
 		byte[] encryptedBytes =en.encrypt(data, key);
 	}

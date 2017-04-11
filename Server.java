@@ -280,8 +280,12 @@ public class Server extends Thread{
 	}
 	
 	private void sendString(String s,OutputStream outputStream,PrintWriter output){
+		int datalen = s.getBytes().length;
+		//System.out.println("Original Data len:");
+		//System.out.println(datalen);
+		int numBytesToSend = datalen + (8 - (datalen % 8));
 		// send the length of the string 
-		output.println(s.getBytes().length);
+		output.println(numBytesToSend);
 		// send the encrypted payload;
 		byte[] bytesToSend = encryptTEA.encrypt(formatToSend(s), TEAkey);
 		try{

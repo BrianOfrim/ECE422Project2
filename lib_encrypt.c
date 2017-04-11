@@ -17,13 +17,13 @@ JNIEXPORT jbyteArray JNICALL Java_Encryption_encrypt
 	lenData = (*env)->GetArrayLength(env, data);
 	lenKey = (*env)->GetArrayLength(env, key);
 
-	myCopyData = (jbyte *) (*env)->GetIntArrayElements(env, data, is_copy_data);
+	myCopyData = (jbyte *) (*env)->GetByteArrayElements(env, data, is_copy_data);
     if (is_copy_data == NULL){
         printf("Cannot obtain data array from JVM\n");
         exit(0);
     }
 
-	myCopyKeys = (jbyte *) (*env)->GetIntArrayElements(env, key, is_copy_key);
+	myCopyKeys = (jbyte *) (*env)->GetByteArrayElements(env, key, is_copy_key);
     if (is_copy_key == NULL){
         printf("Cannot obtain key array from JVM\n");
         exit(0);

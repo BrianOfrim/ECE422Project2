@@ -26,10 +26,10 @@ public class EncryptionTester {
 				data[i] = " ".getBytes()[0];
 			}
 		}
-		//data = str.getBytes();
+
 		System.out.println("The data");
 		System.out.println(Arrays.toString(data));
-		data = str.getBytes();
+
 		System.out.println("Spaces");
 		System.out.println(Arrays.toString(" ".getBytes()));
 		System.out.println("Data size: ");

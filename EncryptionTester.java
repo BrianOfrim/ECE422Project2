@@ -12,6 +12,7 @@ public class EncryptionTester {
 		int datalen = str.getBytes().length;
 		
 		byte[] data = new byte[datalen + (8 - (datalen % 8))];
+		data = str.getBytes();
 		System.out.println("The data");
 		System.out.println(Arrays.toString(data));
 		data = str.getBytes();

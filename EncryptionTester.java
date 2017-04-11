@@ -15,6 +15,8 @@ public class EncryptionTester {
 		System.out.println("Original Data len:");
 		System.out.println(datalen);
 		int numBytesToSend = datalen + (8 - (datalen % 8));
+		System.out.println("New Data len:");
+		System.out.println(numBytesToSend);
 		byte[] tempData = str.getBytes();
 		byte[] data = new byte[numBytesToSend];
 		for(int i = 0; i < numBytesToSend; i ++){
@@ -39,7 +41,7 @@ public class EncryptionTester {
 				      (byte)0x20, (byte)0xB4, (byte)0x9D, (byte)0xE4,
 				      (byte)0x33, (byte)0x6C, (byte)0x38, (byte)0x0D};
 		Encryption en = new Encryption();
-		byte[] encryptedBytes =en.encrypt(data, key);
+		byte[] encryptedBytes = en.encrypt(data, key);
 		System.out.println("Encrypted data:");
 		System.out.println(Arrays.toString(encryptedBytes));
 		System.out.println("Encrypted data length :");

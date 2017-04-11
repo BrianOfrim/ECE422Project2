@@ -38,7 +38,7 @@ JNIEXPORT jbyteArray JNICALL Java_Encryption_encrypt
     int i = 0;
     int numInts = lenData/4;
     printf("number of ints: %d\n",numInts);
-    printf("number of ints calculated: %d\n",(sizeof(datarr)/sizeof(datarr[0]));
+    printf("number of ints calculated: %d\n",(sizeof(datarr)/sizeof(datarr[0])));
     for(i = 0; i < numInts/2;i++){
         printf("current i val: %d\n", i);
         encrypt(&datarr[i*2] , keyarr);

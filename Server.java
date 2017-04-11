@@ -348,7 +348,7 @@ public class Server extends Thread{
 		TEAkey  = establishKey();
         
 		String s = readString(inStream,input);
-		System.out.println("Test message: " + s);
+		System.out.println("Test message: " + s + "|");
         
 		String logInOption = input.readLine();
 		if(logInOption.equals(SIGNUP)){

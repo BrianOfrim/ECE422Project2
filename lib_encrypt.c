@@ -28,6 +28,13 @@ JNIEXPORT jbyteArray JNICALL Java_Encryption_encrypt
         printf("Cannot obtain key array from JVM\n");
         exit(0);
     }
+    int * keyarr = (int*) key;
+    int * dataarr = (int*) data;
+    printf("key 0: %d\n",key[0]);
+    printf("key 1: %d\n",key[0]);
+    printf("key 2: %d\n",key[0]);
+    printf("key 3: %d\n",key[0]);
+
 
 	
 

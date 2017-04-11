@@ -1,3 +1,4 @@
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 public class EncryptionTester {
@@ -41,6 +42,10 @@ public class EncryptionTester {
 		System.out.println("Decrypted data length :");
 		System.out.println(decryptedByte.length);
 		
+		String str2 = new String(decryptedByte);
+		String str3 = new String(decryptedByte, StandardCharsets.UTF_8);
+		System.out.println("Str2: " + str2);
+		System.out.println("Str3: " + str3);
 	}
 
 }

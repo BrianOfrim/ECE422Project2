@@ -313,7 +313,7 @@ public class Server extends Thread{
 		//System.out.println(Arrays.toString(bobPubKeyEnc));//debug
 		System.out.println("Send bob's key, length = ");//debug
 		System.out.println(bobPubKeyEnc.length);//debug
-		//output.println(bobPubKeyEnc.length); // send the length of the key
+		output.println(bobPubKeyEnc.length); // send the length of the key
 		//String s = new String(bobPubKeyEnc);
 		//OutputStream outputStream2 = socket.getOutputStream();
 		//output.println(s);

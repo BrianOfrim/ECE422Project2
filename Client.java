@@ -263,42 +263,26 @@ public class Client {
 		System.out.println("Now recive bob's key");
 		Integer keyLen = null; 
 		try{
-			//keyLen = Integer.parseInt(input.readLine());
+			keyLen = Integer.parseInt(input.readLine());
 		}catch(Exception e){
 			e.printStackTrace();
 		}
 		
 		System.out.print("Length of bob's key");
 		//System.out.println(keyLen); // debug
-        byte[] bobPubKeyEnc = new byte[296];
+        byte[] bobPubKeyEnc = new byte[keyLen];
         int byteCount = 0;
         try{
             //InputStream inStream2 = socket2.getInputStream();
             //System.out.println("pre read bob Pub Key:");
             //System.out.println(Arrays.toString(bobPubKeyEnc));
-            while(byteCount < 296 && (byteCount = inStream.read(bobPubKeyEnc)) > 0){
+            while(byteCount < keyLen && (byteCount = inStream.read(bobPubKeyEnc)) > 0){
             	System.out.println("Current bytecount: " + byteCount); // debug
             }
         }catch(Exception e){
         	e.printStackTrace();
         }
 
-        
-//		try{
-//			bobPubKeyEnc = input.readLine().getBytes();
-//		}catch(Exception e){
-//			e.printStackTrace();
-//		}
-//      
-//        try{
-//        	//inStream = socket.getInputStream();
-//	        while(byteCount < keyLen && (byteCount = inStream.read(bobPubKeyEnc)) > 0){
-//        	//while((byteCount = inStream.read(bobPubKeyEnc)) > 0){
-//	        	System.out.println("Current bytecount: " + byteCount); // debug
-//	        }
-//        }catch(Exception e){
-//        	e.printStackTrace();
-//        }
         System.out.println("Bob's key");
         System.out.println(Arrays.toString(bobPubKeyEnc));//debug
         
@@ -318,48 +302,11 @@ public class Client {
         }
         byte[] aliceSharedSecret = aliceKeyAgree.generateSecret();
         //return aliceSharedSecret
-        System.out.println("Shared secret key:");
-        System.out.println(Arrays.toString(aliceSharedSecret));
-        System.out.println("Secret key len");
-        System.out.println(aliceSharedSecret.length);
-        // send the lenght of Alice secret key
-        //output.println(aliceSharedSecret);
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		//byte[] aliceSharedSecret = generatePrivateKey(socket, output, outStream,input,inStream);
+        System.out.println("Shared secret key:"); // debug
+        System.out.println(Arrays.toString(aliceSharedSecret)); // debug
+        System.out.println("Secret key len"); // debug
+        System.out.println(aliceSharedSecret.length); // debug
 
-		// send keylength to server
-		
-		
-		
-		
-		
-//		output.println(aliceSharedSecret.length);
-//		
-//        System.out.println("Alice secret: " +
-//                toHexString(aliceSharedSecret));
-		
-		//recive bob's key
-		//Integer keyLen = Integer.parseInt(input.readLine());
-		
-//        byte[] bobPubKeyEnc = new byte[keyLen];
-//        int byteCount = 0;
-//        while(byteCount < keyLen && (byteCount = inStream.read(bobPubKeyEnc)) > 0){
-//        	System.out.println("Current bytecount: " + byteCount); // debug
-//        }
-//        System.out.println(Arrays.toString(bobPubKeyEnc));//debug
-		
 		System.out.println("Signin (" + SIGNOUT + "), Signup (" + SIGNUP + ")");
 		String userInput;
 		userInput = stdIn.readLine();

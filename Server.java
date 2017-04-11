@@ -32,6 +32,7 @@ import javax.crypto.interfaces.*;
 
 public class Server extends Thread{
 	private Socket socket;
+	private byte TEAkey[];
 	private static final Integer COMSPORT = 16000;
 	private static final String SHADOWFILENAME = "shadow.txt";
 	private static final String ACCESSGRANTED = "G";
@@ -42,113 +43,14 @@ public class Server extends Thread{
 	private static final String FILENOTFOUND = "N";
 	private static final String ACK = "ACK";
 	
-	// from https://docs.oracle.com/javase/8/docs/technotes/guides/security/crypto/CryptoSpec.html#DH2Ex
-    private static void byte2hex(byte b, StringBuffer buf) {
-        char[] hexChars = { '0', '1', '2', '3', '4', '5', '6', '7', '8',
-                            '9', 'A', 'B', 'C', 'D', 'E', 'F' };
-        int high = ((b & 0xf0) >> 4);
-        int low = (b & 0x0f);
-        buf.append(hexChars[high]);
-        buf.append(hexChars[low]);
-    }
-	
-    // from https://docs.oracle.com/javase/8/docs/technotes/guides/security/crypto/CryptoSpec.html#DH2Ex
-    private static String toHexString(byte[] block) {
-        StringBuffer buf = new StringBuffer();
+	static{
+		System.loadLibrary("encrypt");
+		System.loadLibrary("decrypt");
 
-        int len = block.length;
-
-        for (int i = 0; i < len; i++) {
-             byte2hex(block[i], buf);
-             if (i < len-1) {
-                 buf.append(":");
-             }
-        }
-        return buf.toString();
-    }
+	}
 	
-//	//https://docs.oracle.com/javase/8/docs/technotes/guides/security/crypto/CryptoSpec.html#DH2Ex
-//	public static byte[] generatePrivateKey(byte[] alicePubKeyEnc,Socket socket,PrintWriter output,OutputStream outputStream,BufferedReader input){
-//		KeyFactory bobKeyFac = null;
-//		try{
-//			bobKeyFac = KeyFactory.getInstance("DH");
-//		}catch(Exception e){
-//			e.printStackTrace();
-//		}
-//        X509EncodedKeySpec x509KeySpec = new X509EncodedKeySpec
-//            (alicePubKeyEnc);
-//        PublicKey alicePubKey = null;
-//        try{
-//        	alicePubKey = bobKeyFac.generatePublic(x509KeySpec);
-//		}catch(Exception e){
-//			e.printStackTrace();
-//		}
-//        
-//        DHParameterSpec dhParamSpec = ((DHPublicKey)alicePubKey).getParams();
-//        KeyPairGenerator bobKpairGen = null;
-//        try{
-//        	bobKpairGen = KeyPairGenerator.getInstance("DH");
-//        	bobKpairGen.initialize(dhParamSpec);
-//        }catch(Exception e){
-//			e.printStackTrace();
-//		}
-//       
-//        KeyPair bobKpair = bobKpairGen.generateKeyPair();
-//        KeyAgreement bobKeyAgree = null;
-//        try{
-//	        bobKeyAgree = KeyAgreement.getInstance("DH");
-//	        bobKeyAgree.init(bobKpair.getPrivate());
-//        }catch(Exception e){
-//			e.printStackTrace();
-//		}
-//        byte[] bobPubKeyEnc = bobKpair.getPublic().getEncoded();
-//        
-//		
-//		//outputStream = socket.getOutputStream();
-//		System.out.println(Arrays.toString(bobPubKeyEnc));//debug
-//		System.out.println("Send bob's key, length2 = ");//debug
-//		System.out.println(bobPubKeyEnc.length);//debug
-//		output.println(bobPubKeyEnc.length); // send the length of the key
-//		
-//		
-//		try{
-//			System.out.println("waiting..."); // debug
-//			TimeUnit.SECONDS.sleep(1);
-//			System.out.println("done waiting"); // debug
-//			//outputStream = socket.getOutputStream();
-//			outputStream.write(bobPubKeyEnc);
-//			
-//			System.out.println("Bob's key sent");
-//		}catch(Exception e){
-//			e.printStackTrace();
-//		}
-//		 
-//		try{
-//			bobKeyAgree.doPhase(alicePubKey, true);
-//		}catch(Exception e){
-//			e.printStackTrace();
-//		}
-//		
-//		// get the length of the secret key
-//		Integer aliceLen = null;
-//		try{
-//			aliceLen = Integer.parseInt(input.readLine());
-//		}catch(Exception e){
-//			e.printStackTrace();
-//		}	
-//			
-//		
-//		byte[] bobSharedSecret =  new byte[aliceLen];
-//		
-//        int bobLen;
-//        try{
-//        	bobLen = bobKeyAgree.generateSecret(bobSharedSecret, 1);
-//        }catch(Exception e){
-//        	e.printStackTrace();
-//        }
-//        return bobSharedSecret;
-//        
-//	}
+	Encryption encryptTEA;
+	Decryption decryptTEA;
 	
 	public static void main(String[] args) throws IOException {
 		 ServerSocket serverSocket = null; 
@@ -158,10 +60,16 @@ public class Server extends Thread{
 		 }
 	}
 	
+
+	
 	Server(Socket s){
 		socket = s;
+		encryptTEA = new Encryption();
+		decryptTEA = new Decryption();
 		start();
 	}
+	
+	
 	
 	
 	
@@ -231,47 +139,43 @@ public class Server extends Thread{
 		return null;
 	}
 	
-
-	
-	public void run(){
+	public byte[] establishKey(){
+		PrintWriter output = null;
+		BufferedReader input = null;
+		OutputStream outputStream = null;
+		BufferedInputStream inStream = null;
+		
 		try{
-		PrintWriter output = new PrintWriter(socket.getOutputStream(), true); 
-		BufferedReader input = new BufferedReader(new InputStreamReader( socket.getInputStream()));
-		OutputStream outputStream = socket.getOutputStream();
-		InputStream inStream = socket.getInputStream();
-		
-		String inputLine;
-		
-		//read the ack
-		inputLine = input.readLine();
-		if(inputLine.equals(ACK)){
-			System.out.println("connection established");
-		}else{
-			System.out.println("Protocal error, no ACK");
-			System.exit(1); 
+			output = new PrintWriter(socket.getOutputStream(), true); 
+			input = new BufferedReader(new InputStreamReader( socket.getInputStream()));
+			outputStream = socket.getOutputStream();
+			inStream = new BufferedInputStream(socket.getInputStream());
+		}catch(IOException e){
+			e.printStackTrace();
 		}
 		
+
+		
 		// recive alice public key
-		Integer keyLen = Integer.parseInt(input.readLine());
+		Integer keyLen = null;
+		try{
+			keyLen = Integer.parseInt(input.readLine());
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		
         byte[] alicePubKeyEnc = new byte[keyLen];
         int byteCount = 0;
         System.out.println("Allce key len: "+ keyLen);
-        while(byteCount < keyLen && (byteCount = inStream.read(alicePubKeyEnc)) > 0){
-        	System.out.println("Current bytecount: " + byteCount); // debug
-        }
+        try{
+	        while(byteCount < keyLen && (byteCount = inStream.read(alicePubKeyEnc)) > 0){
+	        	System.out.println("Current bytecount: " + byteCount); // debug
+	        }
+        
+		}catch(Exception e){
+			e.printStackTrace();
+		}
         System.out.println(Arrays.toString(alicePubKeyEnc));// debug
-        
-        //send back bob's public key
-        //byte[] bobPubKeyEnc = generatePrivateKey(alicePubKeyEnc);
-        
-        //byte[] bobSharedSecret = generatePrivateKey(alicePubKeyEnc, socket, output, outputStream, input);
-        
-        //System.out.println("Bob secret: " +
-                //toHexString(bobSharedSecret));
-//		output.println(bobPubKeyEnc.length); // send the length of the key
-//		outputStream = socket.getOutputStream();
-//		System.out.println(Arrays.toString(bobPubKeyEnc));//debug
-//		outputStream.write(bobPubKeyEnc);
         		
 		KeyFactory bobKeyFac = null;
 		try{
@@ -314,13 +218,7 @@ public class Server extends Thread{
 		System.out.println("Send bob's key, length = ");//debug
 		System.out.println(bobPubKeyEnc.length);//debug
 		output.println(bobPubKeyEnc.length); // send the length of the key
-		//String s = new String(bobPubKeyEnc);
-		//OutputStream outputStream2 = socket.getOutputStream();
-		//output.println(s);
-		//output.flush();
-		//try{
-			//outputStream = socket.getOutputStream();
-		//outputStream.flush();
+
 		// wait a bit for the client to avoid a race condition
 		try{
 			System.out.println("waiting..."); // debug
@@ -329,30 +227,21 @@ public class Server extends Thread{
 		}catch(Exception e){
 			e.printStackTrace();
 		}
-		outputStream.write(bobPubKeyEnc);
-		outputStream.flush();
+		
+		try{	
+			outputStream.write(bobPubKeyEnc);
+			outputStream.flush();
 			System.out.println("Bob's key sent");
 			System.out.println(Arrays.toString(bobPubKeyEnc));
-		//}catch(Exception e){
-			//e.printStackTrace();
-		//}
-		
-		
+		}catch(Exception e){
+			e.printStackTrace();
+		}
 		
 		try{
 			bobKeyAgree.doPhase(alicePubKey, true);
 		}catch(Exception e){
 			e.printStackTrace();
 		}
-		
-		// get the length of the secret key
-//		Integer aliceLen = null;
-//		try{
-//			aliceLen = Integer.parseInt(input.readLine());
-//		}catch(Exception e){
-//			e.printStackTrace();
-//		}	
-//			
 		
 		byte[] bobSharedSecret =  new byte[128];
 		
@@ -365,11 +254,97 @@ public class Server extends Thread{
         System.out.println("Bob shared secret");
         System.out.println(Arrays.toString(bobSharedSecret));
         
+        // use the first 16 bytes of the shared secret for the TEA KEY
+        byte TEAkeyGenerated[] =  Arrays.copyOf(bobSharedSecret, 16);	
+        return TEAkeyGenerated;
+		
+	}
+	
+	private byte[] formatToSend(String s){
+		int datalen = s.getBytes().length;
+		//System.out.println("Original Data len:");
+		//System.out.println(datalen);
+		int numBytesToSend = datalen + (8 - (datalen % 8));
+		System.out.println("New Data len:");
+		System.out.println(numBytesToSend);
+		byte[] tempData = s.getBytes();
+		byte[] data = new byte[numBytesToSend];
+		for(int i = 0; i < numBytesToSend; i ++){
+			if(i < datalen){
+				data[i] = tempData[i];
+			}else{
+				data[i] = (byte)0x00;
+			}
+		}
+		return data;
+	}
+	
+	private void sendString(String s,OutputStream outputStream,PrintWriter output){
+		// send the length of the string 
+		output.println(s.getBytes().length);
+		// send the encrypted payload;
+		byte[] bytesToSend = encryptTEA.encrypt(formatToSend(s), TEAkey);
+		try{
+			outputStream.write(bytesToSend);
+		}catch(IOException e){
+			e.printStackTrace();
+		}
+	}
+	
+	private byte[] readData(BufferedInputStream inStream,BufferedReader input){
+		// get the length of data to read
+		Integer datalen = null; 
+		try{
+			datalen = Integer.parseInt(input.readLine());
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		
+		System.out.print("Data length");
+		
+        byte[] encryptedData = new byte[datalen];
+        int byteCount = 0;
+        try{
+            while(byteCount < datalen && (byteCount = inStream.read(encryptedData)) > 0){
+            	System.out.println("Current bytecount: " + byteCount); // debug
+            }
+        }catch(IOException e){
+        	e.printStackTrace();
+        }
+        byte[] decryptedData = decryptTEA.decrypt(encryptedData,TEAkey);
+        return decryptedData;
+	}
+	
+	private String readString(BufferedInputStream inStream,BufferedReader input){
+		byte[] rawBytes = readData( inStream, input);
+		return new String(rawBytes);
+	}
+	
+
+	
+	public void run(){
+		try{
+		PrintWriter output = new PrintWriter(socket.getOutputStream(), true); 
+		BufferedReader input = new BufferedReader(new InputStreamReader( socket.getInputStream()));
+		OutputStream outputStream = socket.getOutputStream();
+		BufferedInputStream inStream = new BufferedInputStream(socket.getInputStream());
+		
+		String inputLine;
+		
+		//read the ack
+		inputLine = input.readLine();
+		if(inputLine.equals(ACK)){
+			System.out.println("connection established");
+		}else{
+			System.out.println("Protocal error, no ACK");
+			System.exit(1); 
+		}
+		     
         
+		TEAkey  = establishKey();
         
-        
-        
-        
+		String s = readString(inStream,input);
+		System.out.println("Test message: " + s);
         
 		String logInOption = input.readLine();
 		if(logInOption.equals(SIGNUP)){

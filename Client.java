@@ -1,3 +1,4 @@
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.FileOutputStream;
@@ -32,7 +33,17 @@ public class Client {
 	private static final String FILENOTFOUND = "N";
 	private static final String ACK = "ACK";
 	
+	private Socket socket;
+	private byte TEAkey[];
 	
+	Encryption encryptTEA;
+	Decryption decryptTEA;
+	
+	static{
+		System.loadLibrary("encrypt");
+		System.loadLibrary("decrypt");
+
+	}
 	
 	// diffie helman stuff from
 	// https://docs.oracle.com/javase/8/docs/technotes/guides/security/crypto/CryptoSpec.html#DH2Ex
@@ -92,141 +103,96 @@ public class Client {
 		SecretKey secretKey = keyGen.generateKey();
 		return secretKey;
 	}
-	// https://docs.oracle.com/javase/8/docs/technotes/guides/security/crypto/CryptoSpec.html#DH2Ex
-	public static byte[] generatePrivateKey(Socket socket2,PrintWriter output, OutputStream outStream, BufferedReader input, InputStream inStream){
-		DHParameterSpec dhSkipParamSpec = new DHParameterSpec(skip1024Modulus,skip1024Base);
-		KeyPairGenerator aliceKpairGen = null;
+	
+	private byte[] formatToSend(String s){
+		int datalen = s.getBytes().length;
+		//System.out.println("Original Data len:");
+		//System.out.println(datalen);
+		int numBytesToSend = datalen + (8 - (datalen % 8));
+		System.out.println("New Data len:");
+		System.out.println(numBytesToSend);
+		byte[] tempData = s.getBytes();
+		byte[] data = new byte[numBytesToSend];
+		for(int i = 0; i < numBytesToSend; i ++){
+			if(i < datalen){
+				data[i] = tempData[i];
+			}else{
+				data[i] = (byte)0x00;
+			}
+		}
+		return data;
+	}
+	
+	private void sendString(String s,OutputStream outputStream,PrintWriter output){
+		// send the length of the string 
+		output.println(s.getBytes().length);
+		// send the encrypted payload;
+		byte[] bytesToSend = encryptTEA.encrypt(formatToSend(s), TEAkey);
 		try{
-		    aliceKpairGen = KeyPairGenerator.getInstance("DH");
-		    aliceKpairGen.initialize(dhSkipParamSpec);
+			outputStream.write(bytesToSend);
+		}catch(IOException e){
+			e.printStackTrace();
+		}
+	}
+	
+	private byte[] readData(BufferedInputStream inStream,BufferedReader input){
+		// get the length of data to read
+		Integer datalen = null; 
+		try{
+			datalen = Integer.parseInt(input.readLine());
 		}catch(Exception e){
 			e.printStackTrace();
 		}
 		
-		KeyPair aliceKpair = aliceKpairGen.generateKeyPair();
-		KeyAgreement aliceKeyAgree = null;
-		try{
-			aliceKeyAgree = KeyAgreement.getInstance("DH");
-			aliceKeyAgree.init(aliceKpair.getPrivate());
-		}catch(Exception e){
-			e.printStackTrace();
-		}
+		System.out.print("Data length");
 		
-		byte[] alicePubKeyEnc = aliceKpair.getPublic().getEncoded();
-		
-		output.println(alicePubKeyEnc.length); // send the length of the key
-		System.out.println(Arrays.toString(alicePubKeyEnc));//debug
-		try{
-			outStream.write(alicePubKeyEnc);
-			outStream.flush();
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-		
-		
-		//recive bob's key
-		//degbug
-		System.out.println("Now recive bob's key");
-		Integer keyLen = null; 
-		try{
-			keyLen = Integer.parseInt(input.readLine());
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-		System.out.print("Length of bob's key");
-		System.out.println(keyLen); // debug
-        byte[] bobPubKeyEnc = new byte[keyLen];
+        byte[] encryptedData = new byte[datalen];
         int byteCount = 0;
         try{
-            InputStream inStream2 = socket2.getInputStream();
-            System.out.println("pre read bob Pub Key:");
-            System.out.println(Arrays.toString(bobPubKeyEnc));
-            while(byteCount < keyLen && (byteCount = inStream2.read(bobPubKeyEnc)) > 0){
+            while(byteCount < datalen && (byteCount = inStream.read(encryptedData)) > 0){
             	System.out.println("Current bytecount: " + byteCount); // debug
             }
-        }catch(Exception e){
+        }catch(IOException e){
         	e.printStackTrace();
         }
-
-        
-//		try{
-//			bobPubKeyEnc = input.readLine().getBytes();
-//		}catch(Exception e){
-//			e.printStackTrace();
-//		}
-//        
-//        try{
-//        	//inStream = socket.getInputStream();
-//	        while(byteCount < keyLen && (byteCount = inStream.read(bobPubKeyEnc)) > 0){
-//        	//while((byteCount = inStream.read(bobPubKeyEnc)) > 0){
-//	        	System.out.println("Current bytecount: " + byteCount); // debug
-//	        }
-//        }catch(Exception e){
-//        	e.printStackTrace();
-//        }
-        System.out.println("Bob's key");
-        System.out.println(Arrays.toString(bobPubKeyEnc));//debug
-        
-        KeyFactory aliceKeyFac = null;
-        try{
-        aliceKeyFac= KeyFactory.getInstance("DH");
-        }catch(Exception e){
-        	e.printStackTrace();
-        }
-        X509EncodedKeySpec x509KeySpec = new X509EncodedKeySpec(bobPubKeyEnc);
-        PublicKey bobPubKey = null;
-        try{
-        	bobPubKey = aliceKeyFac.generatePublic(x509KeySpec);
-        	aliceKeyAgree.doPhase(bobPubKey, true);
-        }catch(Exception e){
-        	e.printStackTrace();
-        }
-        byte[] aliceSharedSecret = aliceKeyAgree.generateSecret();
-        return aliceSharedSecret;
-       
-		
+        byte[] decryptedData = decryptTEA.decrypt(encryptedData,TEAkey);
+        return decryptedData;
 	}
-	// from https://docs.oracle.com/javase/8/docs/technotes/guides/security/crypto/CryptoSpec.html#DH2Ex
-    private static void byte2hex(byte b, StringBuffer buf) {
-        char[] hexChars = { '0', '1', '2', '3', '4', '5', '6', '7', '8',
-                            '9', 'A', 'B', 'C', 'D', 'E', 'F' };
-        int high = ((b & 0xf0) >> 4);
-        int low = (b & 0x0f);
-        buf.append(hexChars[high]);
-        buf.append(hexChars[low]);
-    }
 	
-    // from https://docs.oracle.com/javase/8/docs/technotes/guides/security/crypto/CryptoSpec.html#DH2Ex
-    private static String toHexString(byte[] block) {
-        StringBuffer buf = new StringBuffer();
-
-        int len = block.length;
-
-        for (int i = 0; i < len; i++) {
-             byte2hex(block[i], buf);
-             if (i < len-1) {
-                 buf.append(":");
-             }
-        }
-        return buf.toString();
-    }
+	private String readString(BufferedInputStream inStream,BufferedReader input){
+		byte[] rawBytes = readData( inStream, input);
+		return new String(rawBytes);
+	}
 	
+
 
 	
 	public static void main(String[] args) throws IOException {
-		Socket socket = new Socket(SERVERADDRESS, COMSPORT);
-		BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-		PrintWriter output = new PrintWriter(socket.getOutputStream(), true);
-		BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
-		InputStream inStream = socket.getInputStream();
-		OutputStream outStream = socket.getOutputStream();
 		
-		output.println(ACK); // Send an ack to initialize
+		Client client = new Client(new Socket(SERVERADDRESS, COMSPORT));
+		client.run();
+	}
+	Client(Socket soc){
+		socket = soc;
+		encryptTEA = new Encryption();
+		decryptTEA = new Decryption();
 		
-		//Do diffieHelman protocal and generate shared secret Key
-		
-		
-		
+	}
+	
+	public byte[] establishKey(){
+		BufferedReader input = null;
+		PrintWriter output = null;
+
+		BufferedInputStream inStream = null;
+		OutputStream outStream = null;
+		try{
+			input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+			output = new PrintWriter(socket.getOutputStream(), true);
+			inStream = new BufferedInputStream(socket.getInputStream());
+			outStream = socket.getOutputStream();
+		} catch(Exception e){
+			e.printStackTrace();
+		}
 		
 		DHParameterSpec dhSkipParamSpec = new DHParameterSpec(skip1024Modulus,skip1024Base);
 		KeyPairGenerator aliceKpairGen = null;
@@ -269,13 +235,9 @@ public class Client {
 		}
 		
 		System.out.print("Length of bob's key");
-		//System.out.println(keyLen); // debug
         byte[] bobPubKeyEnc = new byte[keyLen];
         int byteCount = 0;
         try{
-            //InputStream inStream2 = socket2.getInputStream();
-            //System.out.println("pre read bob Pub Key:");
-            //System.out.println(Arrays.toString(bobPubKeyEnc));
             while(byteCount < keyLen && (byteCount = inStream.read(bobPubKeyEnc)) > 0){
             	System.out.println("Current bytecount: " + byteCount); // debug
             }
@@ -306,93 +268,119 @@ public class Client {
         System.out.println(Arrays.toString(aliceSharedSecret)); // debug
         System.out.println("Secret key len"); // debug
         System.out.println(aliceSharedSecret.length); // debug
-
-		System.out.println("Signin (" + SIGNOUT + "), Signup (" + SIGNUP + ")");
-		String userInput;
-		userInput = stdIn.readLine();
+        
+        // use the first 16 bytes of the shared secret for the TEA KEY
+        byte TEAkeyGenerated[] =  Arrays.copyOf(aliceSharedSecret, 16);	
+        return TEAkeyGenerated;
 		
-		if(userInput.equals("U")){
-			output.println("U");
-			System.out.println("Username: ");
-			String userName =  stdIn.readLine();
-			System.out.println("Password: ");
-			String password =  stdIn.readLine();
-			if(userName.contains(" ")){
-				System.out.println("ERROR: username cannot contain spaces, exiting.");
-			}else{
-				output.println(userName);
-				output.println(password);
-				System.out.println("Account created please log back in to use it, exiting.");
-			}
+	}
+	
+	public void run(){
+		try{
+			BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+			PrintWriter output = new PrintWriter(socket.getOutputStream(), true);
+			BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
+			BufferedInputStream inStream = new BufferedInputStream(socket.getInputStream());
+			OutputStream outStream = socket.getOutputStream();
+			
+			output.println(ACK); // Send an ack to initialize
+			
 
+			TEAkey  = establishKey();
+			
+			sendString("Hey what is up dude?",outStream,output);
 			
 			
-		}else if(userInput.equals("I")){
-			output.println("I");
-			System.out.println("Username: ");
-			String userName =  stdIn.readLine();
-			output.println(userName);
-			System.out.println("Password: ");
-			String password =  stdIn.readLine();
-			output.println(password);
-			String credentialCheckMsg = input.readLine();
-			if(credentialCheckMsg.equals(ACCESSGRANTED)){
-				System.out.println ("Valid credentials enter filenames (\"exit\" to quit)");
-				
-				while ((userInput = stdIn.readLine()) != null){
-					
-			         // end loop
-			         if (userInput.equals("exit")){
-			        	 System.out.println("Exiting...");
-			        	 break;
-			         }
-			         System.out.println("Requesting file: " + userInput);   
-					
-					output.println(userInput); // send the name of the file
-					String fileFound = input.readLine();
-					System.out.println("file has been found: " + fileFound); // debug
-					if(fileFound.equals(FILEFOUND)){
-						Integer lengthOfFile = Integer.parseInt(input.readLine());
-						System.out.println("Length of file :" + lengthOfFile + " bytes" );
-						// Receive the file 
-				        inStream = socket.getInputStream();
-				        System.out.println("Reciving file: " + userInput);
-				        outStream = new FileOutputStream("./" + userInput);
-				        
-				        byte[] fileBytes = new byte[lengthOfFile];
-				        
-				        byteCount = 0;
-				        while(byteCount < lengthOfFile && (byteCount = inStream.read(fileBytes)) > 0){
-				        	System.out.println("Current bytecount: " + byteCount); // debug
-				        	outStream.write(fileBytes, 0, byteCount);
-				        }
-				        System.out.println("File "+ userInput +" has been recived");
-				        
-					}else if(fileFound.equals(FILENOTFOUND)){
-						System.out.println("Sorry file not found");
-					}else{
-						System.out.println("Protocal error, exiting.");
-						break;
-					}
-					
-					System.out.println ("Enter filenames (\"exit\" to quit)");
+			System.out.println("Signin (" + SIGNOUT + "), Signup (" + SIGNUP + ")");
+			String userInput;
+			userInput = stdIn.readLine();
+			
+			if(userInput.equals("U")){
+				output.println("U");
+				System.out.println("Username: ");
+				String userName =  stdIn.readLine();
+				System.out.println("Password: ");
+				String password =  stdIn.readLine();
+				if(userName.contains(" ")){
+					System.out.println("ERROR: username cannot contain spaces, exiting.");
+				}else{
+					output.println(userName);
+					output.println(password);
+					System.out.println("Account created please log back in to use it, exiting.");
 				}
-		   }else if(credentialCheckMsg.equals(ACCESSDENIED)){
-			   System.out.println("Invalid cedentials, exiting.");
-		   }else{
-			   System.out.println("Protocal error, exiting.");
-		   }
+	
+				
+				
+			}else if(userInput.equals("I")){
+				output.println("I");
+				System.out.println("Username: ");
+				String userName =  stdIn.readLine();
+				output.println(userName);
+				System.out.println("Password: ");
+				String password =  stdIn.readLine();
+				output.println(password);
+				String credentialCheckMsg = input.readLine();
+				if(credentialCheckMsg.equals(ACCESSGRANTED)){
+					System.out.println ("Valid credentials enter filenames (\"exit\" to quit)");
+					
+					while ((userInput = stdIn.readLine()) != null){
+						
+				         // end loop
+				         if (userInput.equals("exit")){
+				        	 System.out.println("Exiting...");
+				        	 break;
+				         }
+				         System.out.println("Requesting file: " + userInput);   
+						
+						output.println(userInput); // send the name of the file
+						String fileFound = input.readLine();
+						System.out.println("file has been found: " + fileFound); // debug
+						if(fileFound.equals(FILEFOUND)){
+							Integer lengthOfFile = Integer.parseInt(input.readLine());
+							System.out.println("Length of file :" + lengthOfFile + " bytes" );
+							// Receive the file 
+					        inStream = new BufferedInputStream(socket.getInputStream());
+					        System.out.println("Reciving file: " + userInput);
+					        outStream = new FileOutputStream("./" + userInput);
+					        
+					        byte[] fileBytes = new byte[lengthOfFile];
+					        
+					        int byteCount = 0;
+					        while(byteCount < lengthOfFile && (byteCount = inStream.read(fileBytes)) > 0){
+					        	System.out.println("Current bytecount: " + byteCount); // debug
+					        	outStream.write(fileBytes, 0, byteCount);
+					        }
+					        System.out.println("File "+ userInput +" has been recived");
+					        
+						}else if(fileFound.equals(FILENOTFOUND)){
+							System.out.println("Sorry file not found");
+						}else{
+							System.out.println("Protocal error, exiting.");
+							break;
+						}
+						
+						System.out.println ("Enter filenames (\"exit\" to quit)");
+					}
+			   }else if(credentialCheckMsg.equals(ACCESSDENIED)){
+				   System.out.println("Invalid cedentials, exiting.");
+			   }else{
+				   System.out.println("Protocal error, exiting.");
+			   }
+			}
+			if(inStream != null)
+				inStream.close();
+			if(outStream != null)
+				outStream.close();
+			
+			output.close();
+			input.close();
+			stdIn.close();
+			socket.close();
+		} catch(IOException e){
+			e.printStackTrace();
+	        System.err.println("Problem with Communication Server");
+	        System.exit(1); 
 		}
-		if(inStream != null)
-			inStream.close();
-		if(outStream != null)
-			outStream.close();
-		
-		output.close();
-		input.close();
-		stdIn.close();
-		socket.close();
-
 	}
 
 }

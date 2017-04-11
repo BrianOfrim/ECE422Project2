@@ -28,6 +28,10 @@ public class EncryptionTester {
 				      (byte)0x33, (byte)0x6C, (byte)0x38, (byte)0x0D};
 		Encryption en = new Encryption();
 		byte[] encryptedBytes =en.encrypt(data, key);
+		System.out.println("Encrypted data:");
+		System.out.println(Arrays.toString(encryptedBytes));
+		System.out.println("Encrypted data length :");
+		System.out.println(encryptedBytes.length);
 	}
 
 }

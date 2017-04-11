@@ -3,6 +3,7 @@ import java.util.Arrays;
 public class EncryptionTester {
 	static{
 		System.loadLibrary("encrypt");
+		System.loadLibrary("decrypt");
 
 	}
 	public static void main(String[] args){
@@ -10,7 +11,8 @@ public class EncryptionTester {
 		
 	
 		int datalen = str.getBytes().length;
-		
+		System.out.println("Original Data len:");
+		System.out.println(datalen);
 		byte[] data = new byte[datalen + (8 - (datalen % 8))];
 		data = str.getBytes();
 		System.out.println("The data");
@@ -32,6 +34,13 @@ public class EncryptionTester {
 		System.out.println(Arrays.toString(encryptedBytes));
 		System.out.println("Encrypted data length :");
 		System.out.println(encryptedBytes.length);
+		Decryption de = new Decryption();
+		byte[] decryptedByte = de.decrypt(encryptedBytes, key);
+		System.out.println("Decrypted data:");
+		System.out.println(Arrays.toString(decryptedByte));
+		System.out.println("Decrypted data length :");
+		System.out.println(decryptedByte.length);
+		
 	}
 
 }

@@ -93,7 +93,7 @@ public class Client {
 		return secretKey;
 	}
 	// https://docs.oracle.com/javase/8/docs/technotes/guides/security/crypto/CryptoSpec.html#DH2Ex
-	public static byte[] generatePrivateKey(Socket socket,PrintWriter output, OutputStream outStream, BufferedReader input, InputStream inStream){
+	public static byte[] generatePrivateKey(Socket socket2,PrintWriter output, OutputStream outStream, BufferedReader input, InputStream inStream){
 		DHParameterSpec dhSkipParamSpec = new DHParameterSpec(skip1024Modulus,skip1024Base);
 		KeyPairGenerator aliceKpairGen = null;
 		try{
@@ -137,17 +137,33 @@ public class Client {
 		System.out.println(keyLen); // debug
         byte[] bobPubKeyEnc = new byte[keyLen];
         int byteCount = 0;
-        
-        
         try{
-        	//inStream = socket.getInputStream();
-	        while(byteCount < keyLen && (byteCount = inStream.read(bobPubKeyEnc)) > 0){
-        	//while((byteCount = inStream.read(bobPubKeyEnc)) > 0){
-	        	System.out.println("Current bytecount: " + byteCount); // debug
-	        }
+            InputStream inStream2 = socket2.getInputStream();
+            System.out.println("pre read bob Pub Key:");
+            System.out.println(Arrays.toString(bobPubKeyEnc));
+            while(byteCount < keyLen && (byteCount = inStream2.read(bobPubKeyEnc)) > 0){
+            	System.out.println("Current bytecount: " + byteCount); // debug
+            }
         }catch(Exception e){
         	e.printStackTrace();
         }
+
+        
+//		try{
+//			bobPubKeyEnc = input.readLine().getBytes();
+//		}catch(Exception e){
+//			e.printStackTrace();
+//		}
+//        
+//        try{
+//        	//inStream = socket.getInputStream();
+//	        while(byteCount < keyLen && (byteCount = inStream.read(bobPubKeyEnc)) > 0){
+//        	//while((byteCount = inStream.read(bobPubKeyEnc)) > 0){
+//	        	System.out.println("Current bytecount: " + byteCount); // debug
+//	        }
+//        }catch(Exception e){
+//        	e.printStackTrace();
+//        }
         System.out.println("Bob's key");
         System.out.println(Arrays.toString(bobPubKeyEnc));//debug
         
@@ -209,13 +225,130 @@ public class Client {
 		
 		//Do diffieHelman protocal and generate shared secret Key
 		
-		byte[] aliceSharedSecret = generatePrivateKey(socket, output, outStream,input,inStream);
+		
+		
+		
+		DHParameterSpec dhSkipParamSpec = new DHParameterSpec(skip1024Modulus,skip1024Base);
+		KeyPairGenerator aliceKpairGen = null;
+		try{
+		    aliceKpairGen = KeyPairGenerator.getInstance("DH");
+		    aliceKpairGen.initialize(dhSkipParamSpec);
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		
+		KeyPair aliceKpair = aliceKpairGen.generateKeyPair();
+		KeyAgreement aliceKeyAgree = null;
+		try{
+			aliceKeyAgree = KeyAgreement.getInstance("DH");
+			aliceKeyAgree.init(aliceKpair.getPrivate());
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		
+		byte[] alicePubKeyEnc = aliceKpair.getPublic().getEncoded();
+		
+		output.println(alicePubKeyEnc.length); // send the length of the key
+		System.out.println(Arrays.toString(alicePubKeyEnc));//debug
+		try{
+			outStream.write(alicePubKeyEnc);
+			outStream.flush();
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		
+		
+		//recive bob's key
+		//degbug
+		System.out.println("Now recive bob's key");
+		Integer keyLen = null; 
+		try{
+			//keyLen = Integer.parseInt(input.readLine());
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		
+		System.out.print("Length of bob's key");
+		//System.out.println(keyLen); // debug
+        byte[] bobPubKeyEnc = new byte[296];
+        int byteCount = 0;
+        try{
+            //InputStream inStream2 = socket2.getInputStream();
+            //System.out.println("pre read bob Pub Key:");
+            //System.out.println(Arrays.toString(bobPubKeyEnc));
+            while(byteCount < 296 && (byteCount = inStream.read(bobPubKeyEnc)) > 0){
+            	System.out.println("Current bytecount: " + byteCount); // debug
+            }
+        }catch(Exception e){
+        	e.printStackTrace();
+        }
+
+        
+//		try{
+//			bobPubKeyEnc = input.readLine().getBytes();
+//		}catch(Exception e){
+//			e.printStackTrace();
+//		}
+//      
+//        try{
+//        	//inStream = socket.getInputStream();
+//	        while(byteCount < keyLen && (byteCount = inStream.read(bobPubKeyEnc)) > 0){
+//        	//while((byteCount = inStream.read(bobPubKeyEnc)) > 0){
+//	        	System.out.println("Current bytecount: " + byteCount); // debug
+//	        }
+//        }catch(Exception e){
+//        	e.printStackTrace();
+//        }
+        System.out.println("Bob's key");
+        System.out.println(Arrays.toString(bobPubKeyEnc));//debug
+        
+        KeyFactory aliceKeyFac = null;
+        try{
+        aliceKeyFac= KeyFactory.getInstance("DH");
+        }catch(Exception e){
+        	e.printStackTrace();
+        }
+        X509EncodedKeySpec x509KeySpec = new X509EncodedKeySpec(bobPubKeyEnc);
+        PublicKey bobPubKey = null;
+        try{
+        	bobPubKey = aliceKeyFac.generatePublic(x509KeySpec);
+        	aliceKeyAgree.doPhase(bobPubKey, true);
+        }catch(Exception e){
+        	e.printStackTrace();
+        }
+        byte[] aliceSharedSecret = aliceKeyAgree.generateSecret();
+        //return aliceSharedSecret
+        System.out.println("Shared secret key:");
+        System.out.println(Arrays.toString(aliceSharedSecret));
+        System.out.println("Secret key len");
+        System.out.println(aliceSharedSecret.length);
+        // send the lenght of Alice secret key
+        //output.println(aliceSharedSecret);
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		//byte[] aliceSharedSecret = generatePrivateKey(socket, output, outStream,input,inStream);
 
 		// send keylength to server
-		output.println(aliceSharedSecret.length);
 		
-        System.out.println("Alice secret: " +
-                toHexString(aliceSharedSecret));
+		
+		
+		
+		
+//		output.println(aliceSharedSecret.length);
+//		
+//        System.out.println("Alice secret: " +
+//                toHexString(aliceSharedSecret));
 		
 		//recive bob's key
 		//Integer keyLen = Integer.parseInt(input.readLine());
@@ -281,7 +414,7 @@ public class Client {
 				        
 				        byte[] fileBytes = new byte[lengthOfFile];
 				        
-				        int byteCount = 0;
+				        byteCount = 0;
 				        while(byteCount < lengthOfFile && (byteCount = inStream.read(fileBytes)) > 0){
 				        	System.out.println("Current bytecount: " + byteCount); // debug
 				        	outStream.write(fileBytes, 0, byteCount);

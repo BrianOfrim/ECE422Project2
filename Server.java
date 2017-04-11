@@ -23,6 +23,7 @@ import java.security.PublicKey;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 
 import javax.crypto.KeyAgreement;
 import javax.crypto.spec.DHParameterSpec;
@@ -66,84 +67,88 @@ public class Server extends Thread{
         return buf.toString();
     }
 	
-	//https://docs.oracle.com/javase/8/docs/technotes/guides/security/crypto/CryptoSpec.html#DH2Ex
-	public static byte[] generatePrivateKey(byte[] alicePubKeyEnc,Socket socket,PrintWriter output,OutputStream outputStream,BufferedReader input){
-		KeyFactory bobKeyFac = null;
-		try{
-			bobKeyFac = KeyFactory.getInstance("DH");
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-        X509EncodedKeySpec x509KeySpec = new X509EncodedKeySpec
-            (alicePubKeyEnc);
-        PublicKey alicePubKey = null;
-        try{
-        	alicePubKey = bobKeyFac.generatePublic(x509KeySpec);
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-        
-        DHParameterSpec dhParamSpec = ((DHPublicKey)alicePubKey).getParams();
-        KeyPairGenerator bobKpairGen = null;
-        try{
-        	bobKpairGen = KeyPairGenerator.getInstance("DH");
-        	bobKpairGen.initialize(dhParamSpec);
-        }catch(Exception e){
-			e.printStackTrace();
-		}
-       
-        KeyPair bobKpair = bobKpairGen.generateKeyPair();
-        KeyAgreement bobKeyAgree = null;
-        try{
-	        bobKeyAgree = KeyAgreement.getInstance("DH");
-	        bobKeyAgree.init(bobKpair.getPrivate());
-        }catch(Exception e){
-			e.printStackTrace();
-		}
-        byte[] bobPubKeyEnc = bobKpair.getPublic().getEncoded();
-        
-		
-		//outputStream = socket.getOutputStream();
-		System.out.println(Arrays.toString(bobPubKeyEnc));//debug
-		System.out.println("Send bob's key, length = ");//debug
-		System.out.println(bobPubKeyEnc.length);//debug
-		output.println(bobPubKeyEnc.length); // send the length of the key
-		
-		try{
-			//outputStream = socket.getOutputStream();
-			outputStream.write(bobPubKeyEnc);
-			
-			System.out.println("Bob's key sent");
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-		
-		try{
-			bobKeyAgree.doPhase(alicePubKey, true);
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-		
-		// get the length of the secret key
-		Integer aliceLen = null;
-		try{
-			aliceLen = Integer.parseInt(input.readLine());
-		}catch(Exception e){
-			e.printStackTrace();
-		}	
-			
-		
-		byte[] bobSharedSecret =  new byte[aliceLen];
-		
-        int bobLen;
-        try{
-        	bobLen = bobKeyAgree.generateSecret(bobSharedSecret, 1);
-        }catch(Exception e){
-        	e.printStackTrace();
-        }
-        return bobSharedSecret;
-        
-	}
+//	//https://docs.oracle.com/javase/8/docs/technotes/guides/security/crypto/CryptoSpec.html#DH2Ex
+//	public static byte[] generatePrivateKey(byte[] alicePubKeyEnc,Socket socket,PrintWriter output,OutputStream outputStream,BufferedReader input){
+//		KeyFactory bobKeyFac = null;
+//		try{
+//			bobKeyFac = KeyFactory.getInstance("DH");
+//		}catch(Exception e){
+//			e.printStackTrace();
+//		}
+//        X509EncodedKeySpec x509KeySpec = new X509EncodedKeySpec
+//            (alicePubKeyEnc);
+//        PublicKey alicePubKey = null;
+//        try{
+//        	alicePubKey = bobKeyFac.generatePublic(x509KeySpec);
+//		}catch(Exception e){
+//			e.printStackTrace();
+//		}
+//        
+//        DHParameterSpec dhParamSpec = ((DHPublicKey)alicePubKey).getParams();
+//        KeyPairGenerator bobKpairGen = null;
+//        try{
+//        	bobKpairGen = KeyPairGenerator.getInstance("DH");
+//        	bobKpairGen.initialize(dhParamSpec);
+//        }catch(Exception e){
+//			e.printStackTrace();
+//		}
+//       
+//        KeyPair bobKpair = bobKpairGen.generateKeyPair();
+//        KeyAgreement bobKeyAgree = null;
+//        try{
+//	        bobKeyAgree = KeyAgreement.getInstance("DH");
+//	        bobKeyAgree.init(bobKpair.getPrivate());
+//        }catch(Exception e){
+//			e.printStackTrace();
+//		}
+//        byte[] bobPubKeyEnc = bobKpair.getPublic().getEncoded();
+//        
+//		
+//		//outputStream = socket.getOutputStream();
+//		System.out.println(Arrays.toString(bobPubKeyEnc));//debug
+//		System.out.println("Send bob's key, length2 = ");//debug
+//		System.out.println(bobPubKeyEnc.length);//debug
+//		output.println(bobPubKeyEnc.length); // send the length of the key
+//		
+//		
+//		try{
+//			System.out.println("waiting..."); // debug
+//			TimeUnit.SECONDS.sleep(1);
+//			System.out.println("done waiting"); // debug
+//			//outputStream = socket.getOutputStream();
+//			outputStream.write(bobPubKeyEnc);
+//			
+//			System.out.println("Bob's key sent");
+//		}catch(Exception e){
+//			e.printStackTrace();
+//		}
+//		 
+//		try{
+//			bobKeyAgree.doPhase(alicePubKey, true);
+//		}catch(Exception e){
+//			e.printStackTrace();
+//		}
+//		
+//		// get the length of the secret key
+//		Integer aliceLen = null;
+//		try{
+//			aliceLen = Integer.parseInt(input.readLine());
+//		}catch(Exception e){
+//			e.printStackTrace();
+//		}	
+//			
+//		
+//		byte[] bobSharedSecret =  new byte[aliceLen];
+//		
+//        int bobLen;
+//        try{
+//        	bobLen = bobKeyAgree.generateSecret(bobSharedSecret, 1);
+//        }catch(Exception e){
+//        	e.printStackTrace();
+//        }
+//        return bobSharedSecret;
+//        
+//	}
 	
 	public static void main(String[] args) throws IOException {
 		 ServerSocket serverSocket = null; 
@@ -250,6 +255,7 @@ public class Server extends Thread{
 		Integer keyLen = Integer.parseInt(input.readLine());
         byte[] alicePubKeyEnc = new byte[keyLen];
         int byteCount = 0;
+        System.out.println("Allce key len: "+ keyLen);
         while(byteCount < keyLen && (byteCount = inStream.read(alicePubKeyEnc)) > 0){
         	System.out.println("Current bytecount: " + byteCount); // debug
         }
@@ -303,19 +309,35 @@ public class Server extends Thread{
         
 		
 		//outputStream = socket.getOutputStream();
-		System.out.println(Arrays.toString(bobPubKeyEnc));//debug
+        System.out.println("Bob's Key:");
+		//System.out.println(Arrays.toString(bobPubKeyEnc));//debug
 		System.out.println("Send bob's key, length = ");//debug
 		System.out.println(bobPubKeyEnc.length);//debug
-		output.println(bobPubKeyEnc.length); // send the length of the key
-		output.flush();
-		try{
+		//output.println(bobPubKeyEnc.length); // send the length of the key
+		//String s = new String(bobPubKeyEnc);
+		//OutputStream outputStream2 = socket.getOutputStream();
+		//output.println(s);
+		//output.flush();
+		//try{
 			//outputStream = socket.getOutputStream();
-			outputStream.write(bobPubKeyEnc);
-			
-			System.out.println("Bob's key sent");
+		//outputStream.flush();
+		// wait a bit for the client to avoid a race condition
+		try{
+			System.out.println("waiting..."); // debug
+			TimeUnit.SECONDS.sleep(2);
+			System.out.println("done waiting");
 		}catch(Exception e){
 			e.printStackTrace();
 		}
+		outputStream.write(bobPubKeyEnc);
+		outputStream.flush();
+			System.out.println("Bob's key sent");
+			System.out.println(Arrays.toString(bobPubKeyEnc));
+		//}catch(Exception e){
+			//e.printStackTrace();
+		//}
+		
+		
 		
 		try{
 			bobKeyAgree.doPhase(alicePubKey, true);
@@ -324,23 +346,24 @@ public class Server extends Thread{
 		}
 		
 		// get the length of the secret key
-		Integer aliceLen = null;
-		try{
-			aliceLen = Integer.parseInt(input.readLine());
-		}catch(Exception e){
-			e.printStackTrace();
-		}	
-			
+//		Integer aliceLen = null;
+//		try{
+//			aliceLen = Integer.parseInt(input.readLine());
+//		}catch(Exception e){
+//			e.printStackTrace();
+//		}	
+//			
 		
-		byte[] bobSharedSecret =  new byte[aliceLen];
+		byte[] bobSharedSecret =  new byte[128];
 		
         int bobLen;
         try{
-        	bobLen = bobKeyAgree.generateSecret(bobSharedSecret, 1);
+        	bobLen = bobKeyAgree.generateSecret(bobSharedSecret, 0);
         }catch(Exception e){
         	e.printStackTrace();
         }
-        
+        System.out.println("Bob shared secret");
+        System.out.println(Arrays.toString(bobSharedSecret));
         
         
         

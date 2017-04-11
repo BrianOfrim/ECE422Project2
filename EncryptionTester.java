@@ -23,7 +23,7 @@ public class EncryptionTester {
 			if(i < datalen){
 				data[i] = tempData[i];
 			}else{
-				data[i] = " ".getBytes()[0];
+				data[i] = (byte)0x00;
 			}
 		}
 

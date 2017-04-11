@@ -23,10 +23,10 @@ public class EncryptionTester {
 			if(i < datalen){
 				data[i] = tempData[i];
 			}else{
-				data[i] = " ".getBytes()[0];
+				data[i] = (byte)0x00;
 			}
 		}
-		data = str.getBytes();
+		//data = str.getBytes();
 		System.out.println("The data");
 		System.out.println(Arrays.toString(data));
 		data = str.getBytes();

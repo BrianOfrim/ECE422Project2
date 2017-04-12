@@ -90,15 +90,27 @@ public class Client {
     // The base used with the SKIP 1024 bit modulus
     private static final BigInteger skip1024Base = BigInteger.valueOf(2);
 
-			
+    
+	public static void main(String[] args) throws IOException {
+		
+		Client client = new Client(new Socket(SERVERADDRESS, COMSPORT));
+		client.run();
+	}
 	
+	Client(Socket soc){
+		socket = soc;
+		encryptTEA = new Encryption();
+		decryptTEA = new Decryption();
+		
+	}
+			
+	// format a string to bytes, add trailing 0x00 bytes to ensure byte array has a length
+    // that is a multiple of 8
 	private byte[] formatToSend(String s){
 		int datalen = s.getBytes().length;
-		//System.out.println("Original Data len:");
-		//System.out.println(datalen);
+
 		int numBytesToSend = datalen + (8 - (datalen % 8));
-		//System.out.println("New Data len:");
-		//System.out.println(numBytesToSend);
+
 		byte[] tempData = s.getBytes();
 		byte[] data = new byte[numBytesToSend];
 		for(int i = 0; i < numBytesToSend; i ++){
@@ -111,6 +123,7 @@ public class Client {
 		return data;
 	}
 	
+	// encrypt a string and then send it 
 	private void sendString(String s,OutputStream outputStream,PrintWriter output){
 		// send the length of the string 
 		int datalen = s.getBytes().length;
@@ -129,6 +142,7 @@ public class Client {
 		}
 	}
 	
+	// wait for, read then decrypt a stream of bytes
 	private byte[] readData(BufferedInputStream inStream,BufferedReader input){
 		// get the length of data to read
 		Integer datalen = null; 
@@ -166,26 +180,16 @@ public class Client {
         return decryptedDataZerosRemoved;
 	}
 	
+	// turn an array of bytes into a string
 	private String readString(BufferedInputStream inStream,BufferedReader input){
 		byte[] rawBytes = readData( inStream, input);
 		return new String(rawBytes);
 	}
 	
-
-
 	
-	public static void main(String[] args) throws IOException {
-		
-		Client client = new Client(new Socket(SERVERADDRESS, COMSPORT));
-		client.run();
-	}
-	Client(Socket soc){
-		socket = soc;
-		encryptTEA = new Encryption();
-		decryptTEA = new Decryption();
-		
-	}
-	
+	// secure key exchange
+	// go through the protocal for establishing Diffie Helman shared key to use as TEA key
+	// based off of: https://docs.oracle.com/javase/8/docs/technotes/guides/security/crypto/CryptoSpec.html#DH2Ex
 	public byte[] establishKey(){
 		BufferedReader input = null;
 		PrintWriter output = null;
@@ -222,7 +226,6 @@ public class Client {
 		byte[] alicePubKeyEnc = aliceKpair.getPublic().getEncoded();
 		
 		output.println(alicePubKeyEnc.length); // send the length of the key
-		//System.out.println(Arrays.toString(alicePubKeyEnc));//debug
 		try{
 			// ensure that the other side is waiting
 			TimeUnit.SECONDS.sleep(2);
@@ -234,8 +237,6 @@ public class Client {
 		
 		
 		//recive bob's key
-		//degbug
-		//System.out.println("Now recive bob's key");
 		Integer keyLen = null; 
 		try{
 			keyLen = Integer.parseInt(input.readLine());
@@ -243,7 +244,6 @@ public class Client {
 			e.printStackTrace();
 		}
 		
-		//System.out.print("Length of bob's key");
         byte[] bobPubKeyEnc = new byte[keyLen];
         int byteCount = 0;
         try{
@@ -254,9 +254,6 @@ public class Client {
         	e.printStackTrace();
         }
 
-        //System.out.println("Bob's key");
-        //System.out.println(Arrays.toString(bobPubKeyEnc));//debug
-        
         KeyFactory aliceKeyFac = null;
         try{
         aliceKeyFac= KeyFactory.getInstance("DH");
@@ -272,11 +269,6 @@ public class Client {
         	e.printStackTrace();
         }
         byte[] aliceSharedSecret = aliceKeyAgree.generateSecret();
-        //return aliceSharedSecret
-        //System.out.println("Shared secret key:"); // debug
-        //System.out.println(Arrays.toString(aliceSharedSecret)); // debug
-        //System.out.println("Secret key len"); // debug
-        //System.out.println(aliceSharedSecret.length); // debug
         
         // use the first 16 bytes of the shared secret for the TEA KEY
         byte TEAkeyGenerated[] =  Arrays.copyOf(aliceSharedSecret, 16);	
@@ -296,23 +288,25 @@ public class Client {
 			
 			output.println(ACK); // Send an ack to initialize
 
+			// preform a secure key exchange
 			TEAkey  = establishKey();
 			
 			sendString("Hey what is up dude?",outStream,output);
 			
-			
+			// Determine if the user wants to sign in or sign up
 			System.out.println("Signin (" + SIGNIN + "), Signup (" + SIGNUP + ")");
 			String userInput;
 			userInput = stdIn.readLine();
 			
 			if(userInput.equals(SIGNUP)){
-				
-				//output.println("U");
+				// tell the server that the user wishes to sign up
 				sendString(SIGNUP,outStream,output);
+				// retrive credentials
 				System.out.println("Username: ");
 				String userName =  stdIn.readLine();
 				System.out.println("Password: ");
 				String password =  stdIn.readLine();
+				
 				if(userName.contains(" ")){
 					System.out.println("ERROR: username cannot contain spaces, exiting.");
 				}else{
@@ -321,10 +315,10 @@ public class Client {
 					System.out.println("Account created please log back in to use it, exiting.");
 				}
 	
-				
-				
 			}else if(userInput.equals(SIGNIN)){
+				// tell the server that the client wants to signin
 				sendString(SIGNIN,outStream,output);
+				// retrive the users credentials
 				System.out.println("Username: ");
 				String userName =  stdIn.readLine();
 				sendString(userName,outStream,output);
@@ -347,10 +341,9 @@ public class Client {
 						
 				        sendString(userInput,outStream,output); // send the name of the file
 						String fileFound = readString(inStream,input);
-						System.out.println("file has been found: " + fileFound); // debug
+						//System.out.println("file has been found: " + fileFound); // debug
 						if(fileFound.equals(FILEFOUND)){
-							
-							
+							System.out.println("File in being transfered...");
 							byte[] rawBytes = readData( inStream, input);
 							FileOutputStream outFileStream = new FileOutputStream("./" + userInput);
 							//File outStream.write(rawBytes, 0, rawBytes.length);

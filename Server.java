@@ -70,9 +70,6 @@ public class Server extends Thread{
 	}
 	
 	
-	
-	
-	
 	// copied from https://stackoverflow.com/questions/4895523/java-string-to-sha1
 	private static String byteArrayToHexString(byte[] b) {
 		  String result = "";
@@ -139,6 +136,9 @@ public class Server extends Thread{
 		return null;
 	}
 	
+	// secure key exchange
+	// go through the protocal for establishing Diffie Helman shared key to use as TEA key
+	// based off of: https://docs.oracle.com/javase/8/docs/technotes/guides/security/crypto/CryptoSpec.html#DH2Ex
 	public byte[] establishKey(){
 		PrintWriter output = null;
 		BufferedReader input = null;
@@ -153,8 +153,6 @@ public class Server extends Thread{
 		}catch(IOException e){
 			e.printStackTrace();
 		}
-		
-
 		
 		// recive alice public key
 		Integer keyLen = null;
@@ -212,18 +210,11 @@ public class Server extends Thread{
         byte[] bobPubKeyEnc = bobKpair.getPublic().getEncoded();
         
 		
-		//outputStream = socket.getOutputStream();
-        //System.out.println("Bob's Key:");
-		//System.out.println(Arrays.toString(bobPubKeyEnc));//debug
-		//System.out.println("Send bob's key, length = ");//debug
-		//System.out.println(bobPubKeyEnc.length);//debug
 		output.println(bobPubKeyEnc.length); // send the length of the key
 
 		// wait a bit for the client to avoid a race condition
 		try{
-			//System.out.println("waiting..."); // debug
 			TimeUnit.SECONDS.sleep(2);
-			//System.out.println("done waiting");
 		}catch(Exception e){
 			e.printStackTrace();
 		}
@@ -231,8 +222,6 @@ public class Server extends Thread{
 		try{	
 			outputStream.write(bobPubKeyEnc);
 			outputStream.flush();
-			//System.out.println("Bob's key sent");
-			//System.out.println(Arrays.toString(bobPubKeyEnc));
 		}catch(Exception e){
 			e.printStackTrace();
 		}
@@ -251,8 +240,6 @@ public class Server extends Thread{
         }catch(Exception e){
         	e.printStackTrace();
         }
-        //System.out.println("Bob shared secret");
-        //System.out.println(Arrays.toString(bobSharedSecret));
         
         // use the first 16 bytes of the shared secret for the TEA KEY
         byte TEAkeyGenerated[] =  Arrays.copyOf(bobSharedSecret, 16);	
@@ -260,13 +247,12 @@ public class Server extends Thread{
 		
 	}
 	
+	
+	// format a string to bytes, add trailing 0x00 bytes to ensure byte array has a length
+    // that is a multiple of 8
 	private byte[] formatToSend(String s){
 		int datalen = s.getBytes().length;
-		//System.out.println("Original Data len:");
-		//System.out.println(datalen);
 		int numBytesToSend = datalen + (8 - (datalen % 8));
-		//System.out.println("New Data len:");
-		//System.out.println(numBytesToSend);
 		byte[] tempData = s.getBytes();
 		byte[] data = new byte[numBytesToSend];
 		for(int i = 0; i < numBytesToSend; i ++){
@@ -279,11 +265,9 @@ public class Server extends Thread{
 		return data;
 	}
 	
-	
+	// encrypt a string and then send it 
 	private void sendString(String s,OutputStream outputStream,PrintWriter output){
 		int datalen = s.getBytes().length;
-		//System.out.println("Original Data len:");
-		//System.out.println(datalen);
 		int numBytesToSend = datalen + (8 - (datalen % 8));
 		// send the length of the string 
 		output.println(numBytesToSend);
@@ -297,8 +281,10 @@ public class Server extends Thread{
 		}
 	}
 	
+	// turn a file into a stream of bytes, encrypt it then send it
 	private void sendFile(File file ,OutputStream outputStream,PrintWriter output){
 		int datalen = (int) file.length();
+		// ensure steam length is a multiple of 8 for encryption purposes
 		int numBytesToSend = datalen + (8 - (datalen % 8));
 		try{
 			TimeUnit.SECONDS.sleep(1);
@@ -306,8 +292,8 @@ public class Server extends Thread{
 			
 		}
 		
-    	output.println(numBytesToSend); // send the length of file
-    	
+		// send the length of file
+    	output.println(numBytesToSend); 
     	
     	// write the file to the socket
     	byte[] fileByteArray = new byte[numBytesToSend];
@@ -317,7 +303,6 @@ public class Server extends Thread{
     	}catch(Exception e){
     		e.printStackTrace();
     	}
-    	//outputStream = socket.getOutputStream();
     	int numBytes;
     	try{
 	    	while((numBytes = fileInputStream.read(fileByteArray)) > 0){
@@ -327,27 +312,20 @@ public class Server extends Thread{
     	}catch(Exception e){
     		e.printStackTrace();
     	}
-//    	System.out.println("length of file to send"); // debug
-//    	System.out.println(numBytesToSend); // debug
-//    	System.out.println("file bytes"); // debug
-//    	System.out.println(Arrays.toString(fileByteArray)); // debug
     	
     	// encrypt the file 
     	byte[] encryptedFileByteArray = encryptTEA.encrypt(fileByteArray, TEAkey);
     	try{
-			//System.out.println("waiting..."); // debug
+    		// wait for the client to begin reading 
 			TimeUnit.SECONDS.sleep(1);
-			//System.out.println("done waiting");
     		outputStream.write(encryptedFileByteArray,0,numBytesToSend);
     		System.out.println("file sent");
     	}catch(Exception e){
     		e.printStackTrace();
     	}
-    	
-    	
-    	
 	}
 	
+	// wait for, read then decrypt a stream of bytes
 	private byte[] readData(BufferedInputStream inStream,BufferedReader input){
 		// get the length of data to read
 		Integer datalen = null; 
@@ -356,8 +334,6 @@ public class Server extends Thread{
 		}catch(Exception e){
 			e.printStackTrace();
 		}
-		
-		//System.out.print("Data length");
 		
         byte[] encryptedData = new byte[datalen];
         int byteCount = 0;
@@ -378,11 +354,11 @@ public class Server extends Thread{
         	}
         }
         int lastNonZeroByte = decryptedData.length - i;
-        //System.out.println("Number of non zerobytes: " + lastNonZeroByte);// debug
         byte [] decryptedDataZerosRemoved = Arrays.copyOf(decryptedData,lastNonZeroByte);
         return decryptedDataZerosRemoved;
 	}
 	
+	// turn an array of bytes into a string
 	private String readString(BufferedInputStream inStream,BufferedReader input){
 		byte[] rawBytes = readData( inStream, input);
 		return new String(rawBytes);
@@ -408,14 +384,14 @@ public class Server extends Thread{
 			System.exit(1); 
 		}
 		     
-        
+        // peform secure key exchange
 		TEAkey  = establishKey();
         
 		String s = readString(inStream,input);
 		System.out.println("Test message: " + s + "|");
         
 		String logInOption = readString(inStream,input);
-		//System.out.println("Log in option: " + logInOption + "|");
+		// determine the log in type
 		if(logInOption.equals(SIGNUP)){
 			System.out.println("User is signing up");
 			
@@ -425,6 +401,7 @@ public class Server extends Thread{
 			
 			System.out.println("Username: " + userName);
 			System.out.println("Hashed password: " + hashedPW);
+			// write the new users credentials to the shadow file
 			writeToShadow(userName,hashedPW);
 			
 		}else if(logInOption.equals(SIGNIN)){
@@ -436,6 +413,7 @@ public class Server extends Thread{
 			
 			System.out.println("Username: " + userName);
 			System.out.println("Hashed password: " + hashedPW);
+			// validate the users credentials
 			if(validateCredentials(userName, hashedPW)){
 				System.out.println("Valid credentials");
 				output.println(ACCESSGRANTED);
@@ -450,21 +428,7 @@ public class Server extends Thread{
 		            
 		            File file = retriveFile(inputLine);
 		            if(file != null){ // file exists sent it
-		            	//output.println(FILEFOUND);
-		            	sendString(FILEFOUND, outputStream, output);
-		            	
-		            	
-		            	
-//		            	output.println(file.length()); // send the length of file
-//		            	// write the file to the socket
-//		            	byte[] fileByteArray = new byte [(int) file.length()];
-//		            	FileInputStream fileInputStream = new FileInputStream(file);
-//		            	outputStream = socket.getOutputStream();
-//		            	int numBytes;
-//		            	while((numBytes = fileInputStream.read(fileByteArray)) > 0){
-//		            		outputStream.write(fileByteArray,0,numBytes);
-//		            	}
-		            	
+		            	sendString(FILEFOUND, outputStream, output);		            	
 		            	sendFile(file, outputStream, output);
 		            	System.out.println("file has been sent");
 		            	
@@ -473,9 +437,9 @@ public class Server extends Thread{
 		            	
 		            }
 		        } 
-		        //System.out.println("exited while loop"); // debug 
 			}else{
 				System.out.println("Invalid credentials");
+				// the user has entered invalid credentials
 				output.println(ACCESSDENIED);
 			}
 

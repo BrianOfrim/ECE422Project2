@@ -291,8 +291,6 @@ public class Client {
 			// preform a secure key exchange
 			TEAkey  = establishKey();
 			
-			//sendString("Hey what is up dude?",outStream,output);
-			
 			// Determine if the user wants to sign in or sign up
 			System.out.println("Signin (" + SIGNIN + "), Signup (" + SIGNUP + ")");
 			String userInput;
@@ -336,6 +334,11 @@ public class Client {
 				        	 sendString(userInput,outStream,output);
 				        	 System.out.println("Exiting...");
 				        	 break;
+				         }
+				         
+				         if (userInput.equals("shadow.txt")){
+				        	 System.out.println("Invalid file request.");
+				        	 continue;
 				         }
 				        System.out.println("Requesting file: " + userInput);   
 						

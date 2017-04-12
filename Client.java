@@ -16,6 +16,7 @@ import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 
 import javax.crypto.KeyAgreement;
 import javax.crypto.KeyGenerator;
@@ -235,6 +236,8 @@ public class Client {
 		output.println(alicePubKeyEnc.length); // send the length of the key
 		//System.out.println(Arrays.toString(alicePubKeyEnc));//debug
 		try{
+			// ensure that the other side is waiting
+			TimeUnit.SECONDS.sleep(2);
 			outStream.write(alicePubKeyEnc);
 			outStream.flush();
 		}catch(Exception e){

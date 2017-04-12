@@ -323,8 +323,12 @@ public class Server extends Thread{
     	// encrypt the file 
     	byte[] encryptedFileByteArray = encryptTEA.encrypt(fileByteArray, TEAkey);
     	try{
+			System.out.println("waiting..."); // debug
+			TimeUnit.SECONDS.sleep(2);
+			System.out.println("done waiting");
     		outputStream.write(encryptedFileByteArray,0,numBytesToSend);
-    	}catch(IOException e){
+    		System.out.println("file sent");
+    	}catch(Exception e){
     		e.printStackTrace();
     	}
     	

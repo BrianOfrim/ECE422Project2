@@ -347,10 +347,10 @@ public class Client {
 				        	 System.out.println("Exiting...");
 				        	 break;
 				         }
-				         System.out.println("Requesting file: " + userInput);   
+				        System.out.println("Requesting file: " + userInput);   
 						
-				        sendString(userInput,outStream,output);; // send the name of the file
-						String fileFound = input.readLine();
+				        sendString(userInput,outStream,output); // send the name of the file
+						String fileFound = readString(inStream,input);
 						System.out.println("file has been found: " + fileFound); // debug
 						if(fileFound.equals(FILEFOUND)){
 							Integer lengthOfFile = Integer.parseInt(input.readLine());

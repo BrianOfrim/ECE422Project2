@@ -397,7 +397,8 @@ public class Server extends Thread{
 		            
 		            File file = retriveFile(inputLine);
 		            if(file != null){ // file exists sent it
-		            	output.println(FILEFOUND);
+		            	//output.println(FILEFOUND);
+		            	sendString(FILEFOUND, outputStream, output);
 		            	output.println(file.length()); // send the length of file
 		            	// write the file to the socket
 		            	byte[] fileByteArray = new byte [(int) file.length()];

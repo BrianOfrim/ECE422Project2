@@ -172,6 +172,8 @@ public class Client {
         int lastNonZeroByte = decryptedData.length - i;
         System.out.println("Number of non zerobytes: " + lastNonZeroByte);// debug
         byte [] decryptedDataZerosRemoved = Arrays.copyOf(decryptedData,lastNonZeroByte);
+        System.out.println("The decrypted array"); // debug
+        System.out.println(Arrays.toString(decryptedDataZerosRemoved));
         return decryptedDataZerosRemoved;
 	}
 	

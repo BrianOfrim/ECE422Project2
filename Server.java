@@ -299,6 +299,12 @@ public class Server extends Thread{
 	private void sendFile(File file ,OutputStream outputStream,PrintWriter output){
 		int datalen = (int) file.length();
 		int numBytesToSend = datalen + (8 - (datalen % 8));
+		try{
+			TimeUnit.SECONDS.sleep(1);
+		}catch(Exception e){
+			
+		}
+		
     	output.println(numBytesToSend); // send the length of file
     	
     	

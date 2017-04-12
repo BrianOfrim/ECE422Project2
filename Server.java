@@ -265,8 +265,8 @@ public class Server extends Thread{
 		//System.out.println("Original Data len:");
 		//System.out.println(datalen);
 		int numBytesToSend = datalen + (8 - (datalen % 8));
-		System.out.println("New Data len:");
-		System.out.println(numBytesToSend);
+		//System.out.println("New Data len:");
+		//System.out.println(numBytesToSend);
 		byte[] tempData = s.getBytes();
 		byte[] data = new byte[numBytesToSend];
 		for(int i = 0; i < numBytesToSend; i ++){
@@ -290,8 +290,9 @@ public class Server extends Thread{
 		// send the encrypted payload;
 		byte[] bytesToSend = encryptTEA.encrypt(formatToSend(s), TEAkey);
 		try{
+			Thread.sleep(500);
 			outputStream.write(bytesToSend);
-		}catch(IOException e){
+		}catch(Exception e){
 			e.printStackTrace();
 		}
 	}
@@ -356,7 +357,7 @@ public class Server extends Thread{
 			e.printStackTrace();
 		}
 		
-		System.out.print("Data length");
+		//System.out.print("Data length");
 		
         byte[] encryptedData = new byte[datalen];
         int byteCount = 0;
@@ -377,7 +378,7 @@ public class Server extends Thread{
         	}
         }
         int lastNonZeroByte = decryptedData.length - i;
-        System.out.println("Number of non zerobytes: " + lastNonZeroByte);// debug
+        //System.out.println("Number of non zerobytes: " + lastNonZeroByte);// debug
         byte [] decryptedDataZerosRemoved = Arrays.copyOf(decryptedData,lastNonZeroByte);
         return decryptedDataZerosRemoved;
 	}

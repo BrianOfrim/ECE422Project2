@@ -30,25 +30,25 @@ JNIEXPORT jbyteArray JNICALL Java_Encryption_encrypt
     }
     int * keyarr = (int*) myCopyKeys;
     int * datarr = (int*) myCopyData;
-    printf("key 0: %d\n",keyarr[0]);
-    printf("key 1: %d\n",keyarr[1]);
-    printf("key 2: %d\n",keyarr[2]);
-    printf("key 3: %d\n",keyarr[3]);
+    //printf("key 0: %d\n",keyarr[0]);
+    //printf("key 1: %d\n",keyarr[1]);
+    //printf("key 2: %d\n",keyarr[2]);
+    //printf("key 3: %d\n",keyarr[3]);
 
     int i = 0;
-    printf("number of bytes ints: %d\n",lenData);
+    //printf("number of bytes ints: %d\n",lenData);
     int numInts = lenData/4;
-    printf("number of ints: %d\n",numInts);
-    printf("number of ints calculated: %d\n",(sizeof(datarr)/sizeof(datarr[0])));
+    //printf("number of ints: %d\n",numInts);
+    //printf("number of ints calculated: %d\n",(sizeof(datarr)/sizeof(datarr[0])));
     for(i = 0; i < numInts/2;i++){
-        printf("current i val: %d\n", i);
+        //printf("current i val: %d\n", i);
         encrypt(&datarr[i*2] , keyarr);
 
     }
-    printf("made it passed the loop\n");
+    //printf("made it passed the loop\n");
     jbyteArray returnByteArray = (*env)-> NewByteArray(env, lenData);
     (*env)->SetByteArrayRegion(env, returnByteArray,0, lenData,myCopyData);
-    printf("made it passed the assignment\n");
+    //printf("made it passed the assignment\n");
 	
     return (jbyteArray) returnByteArray;
 

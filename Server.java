@@ -279,6 +279,7 @@ public class Server extends Thread{
 		return data;
 	}
 	
+	
 	private void sendString(String s,OutputStream outputStream,PrintWriter output){
 		int datalen = s.getBytes().length;
 		//System.out.println("Original Data len:");
@@ -293,6 +294,42 @@ public class Server extends Thread{
 		}catch(IOException e){
 			e.printStackTrace();
 		}
+	}
+	
+	private void sendFile(File file ,OutputStream outputStream,PrintWriter output){
+		int datalen = (int) file.length();
+		int numBytesToSend = datalen + (8 - (datalen % 8));
+    	output.println(numBytesToSend); // send the length of file
+    	
+    	
+    	// write the file to the socket
+    	byte[] fileByteArray = new byte[numBytesToSend];
+    	FileInputStream fileInputStream = null;
+    	try{
+    		fileInputStream = new FileInputStream(file);
+    	}catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	//outputStream = socket.getOutputStream();
+    	int numBytes;
+    	try{
+	    	while((numBytes = fileInputStream.read(fileByteArray)) > 0){
+	    		System.out.println("Reading in file...");
+	    	}
+	    	fileInputStream.close();
+    	}catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	// encrypt the file 
+    	byte[] encryptedFileByteArray = encryptTEA.encrypt(fileByteArray, TEAkey);
+    	try{
+    		outputStream.write(encryptedFileByteArray,0,numBytesToSend);
+    	}catch(IOException e){
+    		e.printStackTrace();
+    	}
+    	
+    	
+    	
 	}
 	
 	private byte[] readData(BufferedInputStream inStream,BufferedReader input){
@@ -399,19 +436,23 @@ public class Server extends Thread{
 		            if(file != null){ // file exists sent it
 		            	//output.println(FILEFOUND);
 		            	sendString(FILEFOUND, outputStream, output);
-		            	output.println(file.length()); // send the length of file
-		            	// write the file to the socket
-		            	byte[] fileByteArray = new byte [(int) file.length()];
-		            	FileInputStream fileInputStream = new FileInputStream(file);
-		            	outputStream = socket.getOutputStream();
-		            	int numBytes;
-		            	while((numBytes = fileInputStream.read(fileByteArray)) > 0){
-		            		outputStream.write(fileByteArray,0,numBytes);
-		            	}
+		            	
+		            	
+		            	
+//		            	output.println(file.length()); // send the length of file
+//		            	// write the file to the socket
+//		            	byte[] fileByteArray = new byte [(int) file.length()];
+//		            	FileInputStream fileInputStream = new FileInputStream(file);
+//		            	outputStream = socket.getOutputStream();
+//		            	int numBytes;
+//		            	while((numBytes = fileInputStream.read(fileByteArray)) > 0){
+//		            		outputStream.write(fileByteArray,0,numBytes);
+//		            	}
+		            	sendFile(file, outputStream, output);
 		            	System.out.println("file has been sent");
 		            	
 		            }else{ // file does not exits
-		            	output.println(FILENOTFOUND);
+		            	sendString(FILENOTFOUND, outputStream, output);;
 		            	
 		            }
 		        } 

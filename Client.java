@@ -312,6 +312,7 @@ public class Client {
 			userInput = stdIn.readLine();
 			
 			if(userInput.equals(SIGNUP)){
+				
 				//output.println("U");
 				sendString(SIGNUP,outStream,output);
 				System.out.println("Username: ");
@@ -353,20 +354,28 @@ public class Client {
 						String fileFound = readString(inStream,input);
 						System.out.println("file has been found: " + fileFound); // debug
 						if(fileFound.equals(FILEFOUND)){
-							Integer lengthOfFile = Integer.parseInt(input.readLine());
-							System.out.println("Length of file :" + lengthOfFile + " bytes" );
-							// Receive the file 
-					        inStream = new BufferedInputStream(socket.getInputStream());
-					        System.out.println("Reciving file: " + userInput);
-					        outStream = new FileOutputStream("./" + userInput);
+							
+							
+							byte[] rawBytes = readData( inStream, input);
+							FileOutputStream outFileStream = new FileOutputStream("./" + userInput);
+							//File outStream.write(rawBytes, 0, rawBytes.length);
+							outFileStream.write(rawBytes,0,rawBytes.length);
+							outFileStream.close();
+							
+//							Integer lengthOfFile = Integer.parseInt(input.readLine());
+//							System.out.println("Length of file :" + lengthOfFile + " bytes" );
+//							// Receive the file 
+//					        inStream = new BufferedInputStream(socket.getInputStream());
+//					        System.out.println("Reciving file: " + userInput);
+//					        outStream = new FileOutputStream("./" + userInput);
 					        
-					        byte[] fileBytes = new byte[lengthOfFile];
+					        //byte[] fileBytes = new byte[lengthOfFile];
 					        
-					        int byteCount = 0;
-					        while(byteCount < lengthOfFile && (byteCount = inStream.read(fileBytes)) > 0){
-					        	System.out.println("Current bytecount: " + byteCount); // debug
-					        	outStream.write(fileBytes, 0, byteCount);
-					        }
+//					        int byteCount = 0;
+//					        while(byteCount < lengthOfFile && (byteCount = inStream.read(fileBytes)) > 0){
+//					        	System.out.println("Current bytecount: " + byteCount); // debug
+//					        	outStream.write(fileBytes, 0, byteCount);
+//					        }
 					        System.out.println("File "+ userInput +" has been recived");
 					        
 						}else if(fileFound.equals(FILENOTFOUND)){

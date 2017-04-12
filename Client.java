@@ -91,19 +91,6 @@ public class Client {
     private static final BigInteger skip1024Base = BigInteger.valueOf(2);
 
 			
-	public static SecretKey genKey(){
-		KeyGenerator keyGen = null;
-		try{
-			keyGen = KeyGenerator.getInstance("AES");
-		}catch(Exception e){
-			e.printStackTrace();
-			return null;
-		}
-		SecureRandom random = new SecureRandom(); // cryptograph. secure random 
-		keyGen.init(random); 
-		SecretKey secretKey = keyGen.generateKey();
-		return secretKey;
-	}
 	
 	private byte[] formatToSend(String s){
 		int datalen = s.getBytes().length;
@@ -157,7 +144,7 @@ public class Client {
         int byteCount = 0;
         try{
             while(byteCount < datalen && (byteCount = inStream.read(encryptedData)) > 0){
-            	System.out.println("Current bytecount: " + byteCount); // debug
+            	//System.out.println("Current bytecount: " + byteCount); // debug
             }
         }catch(IOException e){
         	e.printStackTrace();
@@ -261,7 +248,7 @@ public class Client {
         int byteCount = 0;
         try{
             while(byteCount < keyLen && (byteCount = inStream.read(bobPubKeyEnc)) > 0){
-            	System.out.println("Current bytecount: " + byteCount); // debug
+            	//System.out.println("Current bytecount: " + byteCount); // debug
             }
         }catch(Exception e){
         	e.printStackTrace();
@@ -305,8 +292,9 @@ public class Client {
 			BufferedInputStream inStream = new BufferedInputStream(socket.getInputStream());
 			OutputStream outStream = socket.getOutputStream();
 			
-			output.println(ACK); // Send an ack to initialize
+			System.out.println("Establishing connection...");
 			
+			output.println(ACK); // Send an ack to initialize
 
 			TEAkey  = establishKey();
 			

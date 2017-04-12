@@ -387,8 +387,8 @@ public class Server extends Thread{
         // peform secure key exchange
 		TEAkey  = establishKey();
         
-		String s = readString(inStream,input);
-		System.out.println("Test message: " + s + "|");
+//		String s = readString(inStream,input);
+//		System.out.println("Test message: " + s + "|");
         
 		String logInOption = readString(inStream,input);
 		// determine the log in type

@@ -291,7 +291,7 @@ public class Client {
 			// preform a secure key exchange
 			TEAkey  = establishKey();
 			
-			sendString("Hey what is up dude?",outStream,output);
+			//sendString("Hey what is up dude?",outStream,output);
 			
 			// Determine if the user wants to sign in or sign up
 			System.out.println("Signin (" + SIGNIN + "), Signup (" + SIGNUP + ")");
@@ -343,7 +343,7 @@ public class Client {
 						String fileFound = readString(inStream,input);
 						//System.out.println("file has been found: " + fileFound); // debug
 						if(fileFound.equals(FILEFOUND)){
-							System.out.println("File in being transfered...");
+							System.out.println("File is being transfered...");
 							byte[] rawBytes = readData( inStream, input);
 							FileOutputStream outFileStream = new FileOutputStream("./" + userInput);
 							//File outStream.write(rawBytes, 0, rawBytes.length);

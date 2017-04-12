@@ -149,7 +149,7 @@ public class Client {
 			e.printStackTrace();
 		}
 		
-		System.out.print("Data length");
+		System.out.print("Data length " +  datalen);
 		
         byte[] encryptedData = new byte[datalen];
         int byteCount = 0;

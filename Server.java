@@ -448,6 +448,7 @@ public class Server extends Thread{
 //		            	while((numBytes = fileInputStream.read(fileByteArray)) > 0){
 //		            		outputStream.write(fileByteArray,0,numBytes);
 //		            	}
+		            	
 		            	sendFile(file, outputStream, output);
 		            	System.out.println("file has been sent");
 		            	

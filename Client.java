@@ -233,7 +233,7 @@ public class Client {
 		byte[] alicePubKeyEnc = aliceKpair.getPublic().getEncoded();
 		
 		output.println(alicePubKeyEnc.length); // send the length of the key
-		System.out.println(Arrays.toString(alicePubKeyEnc));//debug
+		//System.out.println(Arrays.toString(alicePubKeyEnc));//debug
 		try{
 			outStream.write(alicePubKeyEnc);
 			outStream.flush();
@@ -244,7 +244,7 @@ public class Client {
 		
 		//recive bob's key
 		//degbug
-		System.out.println("Now recive bob's key");
+		//System.out.println("Now recive bob's key");
 		Integer keyLen = null; 
 		try{
 			keyLen = Integer.parseInt(input.readLine());
@@ -252,7 +252,7 @@ public class Client {
 			e.printStackTrace();
 		}
 		
-		System.out.print("Length of bob's key");
+		//System.out.print("Length of bob's key");
         byte[] bobPubKeyEnc = new byte[keyLen];
         int byteCount = 0;
         try{
@@ -263,8 +263,8 @@ public class Client {
         	e.printStackTrace();
         }
 
-        System.out.println("Bob's key");
-        System.out.println(Arrays.toString(bobPubKeyEnc));//debug
+        //System.out.println("Bob's key");
+        //System.out.println(Arrays.toString(bobPubKeyEnc));//debug
         
         KeyFactory aliceKeyFac = null;
         try{
@@ -282,10 +282,10 @@ public class Client {
         }
         byte[] aliceSharedSecret = aliceKeyAgree.generateSecret();
         //return aliceSharedSecret
-        System.out.println("Shared secret key:"); // debug
-        System.out.println(Arrays.toString(aliceSharedSecret)); // debug
-        System.out.println("Secret key len"); // debug
-        System.out.println(aliceSharedSecret.length); // debug
+        //System.out.println("Shared secret key:"); // debug
+        //System.out.println(Arrays.toString(aliceSharedSecret)); // debug
+        //System.out.println("Secret key len"); // debug
+        //System.out.println(aliceSharedSecret.length); // debug
         
         // use the first 16 bytes of the shared secret for the TEA KEY
         byte TEAkeyGenerated[] =  Arrays.copyOf(aliceSharedSecret, 16);	

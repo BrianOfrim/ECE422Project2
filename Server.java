@@ -166,7 +166,7 @@ public class Server extends Thread{
 		
         byte[] alicePubKeyEnc = new byte[keyLen];
         int byteCount = 0;
-        System.out.println("Allce key len: "+ keyLen);
+        //System.out.println("Allce key len: "+ keyLen);
         try{
 	        while(byteCount < keyLen && (byteCount = inStream.read(alicePubKeyEnc)) > 0){
 	        	System.out.println("Current bytecount: " + byteCount); // debug
@@ -175,7 +175,7 @@ public class Server extends Thread{
 		}catch(Exception e){
 			e.printStackTrace();
 		}
-        System.out.println(Arrays.toString(alicePubKeyEnc));// debug
+        //System.out.println(Arrays.toString(alicePubKeyEnc));// debug
         		
 		KeyFactory bobKeyFac = null;
 		try{
@@ -213,17 +213,17 @@ public class Server extends Thread{
         
 		
 		//outputStream = socket.getOutputStream();
-        System.out.println("Bob's Key:");
+        //System.out.println("Bob's Key:");
 		//System.out.println(Arrays.toString(bobPubKeyEnc));//debug
-		System.out.println("Send bob's key, length = ");//debug
-		System.out.println(bobPubKeyEnc.length);//debug
+		//System.out.println("Send bob's key, length = ");//debug
+		//System.out.println(bobPubKeyEnc.length);//debug
 		output.println(bobPubKeyEnc.length); // send the length of the key
 
 		// wait a bit for the client to avoid a race condition
 		try{
-			System.out.println("waiting..."); // debug
+			//System.out.println("waiting..."); // debug
 			TimeUnit.SECONDS.sleep(2);
-			System.out.println("done waiting");
+			//System.out.println("done waiting");
 		}catch(Exception e){
 			e.printStackTrace();
 		}
@@ -231,8 +231,8 @@ public class Server extends Thread{
 		try{	
 			outputStream.write(bobPubKeyEnc);
 			outputStream.flush();
-			System.out.println("Bob's key sent");
-			System.out.println(Arrays.toString(bobPubKeyEnc));
+			//System.out.println("Bob's key sent");
+			//System.out.println(Arrays.toString(bobPubKeyEnc));
 		}catch(Exception e){
 			e.printStackTrace();
 		}
@@ -251,8 +251,8 @@ public class Server extends Thread{
         }catch(Exception e){
         	e.printStackTrace();
         }
-        System.out.println("Bob shared secret");
-        System.out.println(Arrays.toString(bobSharedSecret));
+        //System.out.println("Bob shared secret");
+        //System.out.println(Arrays.toString(bobSharedSecret));
         
         // use the first 16 bytes of the shared secret for the TEA KEY
         byte TEAkeyGenerated[] =  Arrays.copyOf(bobSharedSecret, 16);	

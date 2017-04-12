@@ -347,6 +347,7 @@ public class Client {
 						
 				         // end loop
 				         if (userInput.equals("exit")){
+				        	 sendString(userInput,outStream,output);
 				        	 System.out.println("Exiting...");
 				        	 break;
 				         }
@@ -364,20 +365,6 @@ public class Client {
 							outFileStream.write(rawBytes,0,rawBytes.length);
 							outFileStream.close();
 							
-//							Integer lengthOfFile = Integer.parseInt(input.readLine());
-//							System.out.println("Length of file :" + lengthOfFile + " bytes" );
-//							// Receive the file 
-//					        inStream = new BufferedInputStream(socket.getInputStream());
-//					        System.out.println("Reciving file: " + userInput);
-//					        outStream = new FileOutputStream("./" + userInput);
-					        
-					        //byte[] fileBytes = new byte[lengthOfFile];
-					        
-//					        int byteCount = 0;
-//					        while(byteCount < lengthOfFile && (byteCount = inStream.read(fileBytes)) > 0){
-//					        	System.out.println("Current bytecount: " + byteCount); // debug
-//					        	outStream.write(fileBytes, 0, byteCount);
-//					        }
 					        System.out.println("File "+ userInput +" has been recived");
 					        
 						}else if(fileFound.equals(FILENOTFOUND)){

@@ -321,8 +321,8 @@ public class Client {
 				if(userName.contains(" ")){
 					System.out.println("ERROR: username cannot contain spaces, exiting.");
 				}else{
-					output.println(userName);
-					output.println(password);
+					sendString(userName,outStream,output);
+					sendString(password,outStream,output);
 					System.out.println("Account created please log back in to use it, exiting.");
 				}
 	
@@ -332,10 +332,10 @@ public class Client {
 				sendString(SIGNIN,outStream,output);
 				System.out.println("Username: ");
 				String userName =  stdIn.readLine();
-				output.println(userName);
+				sendString(userName,outStream,output);
 				System.out.println("Password: ");
 				String password =  stdIn.readLine();
-				output.println(password);
+				sendString(password,outStream,output);
 				String credentialCheckMsg = input.readLine();
 				if(credentialCheckMsg.equals(ACCESSGRANTED)){
 					System.out.println ("Valid credentials enter filenames (\"exit\" to quit)");
@@ -349,7 +349,7 @@ public class Client {
 				         }
 				         System.out.println("Requesting file: " + userInput);   
 						
-						output.println(userInput); // send the name of the file
+				        sendString(userInput,outStream,output);; // send the name of the file
 						String fileFound = input.readLine();
 						System.out.println("file has been found: " + fileFound); // debug
 						if(fileFound.equals(FILEFOUND)){

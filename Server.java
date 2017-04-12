@@ -366,8 +366,8 @@ public class Server extends Thread{
 		if(logInOption.equals(SIGNUP)){
 			System.out.println("User signing up");
 			
-			String userName = input.readLine();
-			String password = input.readLine();
+			String userName = readString(inStream,input);
+			String password = readString(inStream,input);
 			String hashedPW = hashPassword((password + userName).getBytes());
 			
 			System.out.println("Username: " + userName);
@@ -377,8 +377,8 @@ public class Server extends Thread{
 		}else if(logInOption.equals(SIGNIN)){
 			System.out.println("User signing in");
 			
-			String userName = input.readLine();
-			String password = input.readLine();
+			String userName = readString(inStream,input);
+			String password = readString(inStream,input);
 			String hashedPW = hashPassword((password + userName).getBytes());
 			
 			System.out.println("Username: " + userName);
@@ -386,7 +386,7 @@ public class Server extends Thread{
 			if(validateCredentials(userName, hashedPW)){
 				System.out.println("Valid credentials");
 				output.println(ACCESSGRANTED);
-		        while ((inputLine = input.readLine()) != null) { 
+		        while ((inputLine = readString(inStream,input)) != null) { 
 		            if (inputLine.equals("exit")) {
 		            	System.out.println("Client exiting now");
 		            	break;

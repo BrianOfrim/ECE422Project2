@@ -28,7 +28,7 @@ public class Client {
 	private static final String ACCESSGRANTED = "G";
 	private static final String ACCESSDENIED = "D";
 	private static final String SIGNUP = "U";
-	private static final String SIGNOUT = "I";
+	private static final String SIGNIN = "I";
 	private static final String FILEFOUND = "F";
 	private static final String FILENOTFOUND = "N";
 	private static final String ACK = "ACK";
@@ -161,7 +161,18 @@ public class Client {
         	e.printStackTrace();
         }
         byte[] decryptedData = decryptTEA.decrypt(encryptedData,TEAkey);
-        return decryptedData;
+        
+        // remove the trailing 0x00 byte
+        int i;
+        for(i = 0; i < decryptedData.length; i++ ){
+        	if(decryptedData[decryptedData.length - 1 - i] != (byte) 0x00){
+        		break;
+        	}
+        }
+        int lastNonZeroByte = decryptedData.length - i;
+        System.out.println("Number of non zerobytes: " + lastNonZeroByte);// debug
+        byte [] decryptedDataZerosRemoved = Arrays.copyOf(decryptedData,lastNonZeroByte);
+        return decryptedDataZerosRemoved;
 	}
 	
 	private String readString(BufferedInputStream inStream,BufferedReader input){
@@ -296,13 +307,13 @@ public class Client {
 			sendString("Hey what is up dude?",outStream,output);
 			
 			
-			System.out.println("Signin (" + SIGNOUT + "), Signup (" + SIGNUP + ")");
+			System.out.println("Signin (" + SIGNIN + "), Signup (" + SIGNUP + ")");
 			String userInput;
 			userInput = stdIn.readLine();
 			
-			if(userInput.equals("U")){
+			if(userInput.equals(SIGNUP)){
 				//output.println("U");
-				sendString("U",outStream,output);
+				sendString(SIGNUP,outStream,output);
 				System.out.println("Username: ");
 				String userName =  stdIn.readLine();
 				System.out.println("Password: ");
@@ -317,8 +328,8 @@ public class Client {
 	
 				
 				
-			}else if(userInput.equals("I")){
-				sendString("I",outStream,output);
+			}else if(userInput.equals(SIGNIN)){
+				sendString(SIGNIN,outStream,output);
 				System.out.println("Username: ");
 				String userName =  stdIn.readLine();
 				output.println(userName);

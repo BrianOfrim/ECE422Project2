@@ -320,11 +320,16 @@ public class Server extends Thread{
     	}catch(Exception e){
     		e.printStackTrace();
     	}
+    	System.out.println("length of file to send"); // debug
+    	System.out.println(numBytesToSend); // debug
+    	System.out.println("file bytes"); // debug
+    	System.out.println(Arrays.toString(fileByteArray)); // debug
+    	
     	// encrypt the file 
     	byte[] encryptedFileByteArray = encryptTEA.encrypt(fileByteArray, TEAkey);
     	try{
 			System.out.println("waiting..."); // debug
-			TimeUnit.SECONDS.sleep(2);
+			TimeUnit.SECONDS.sleep(1);
 			System.out.println("done waiting");
     		outputStream.write(encryptedFileByteArray,0,numBytesToSend);
     		System.out.println("file sent");

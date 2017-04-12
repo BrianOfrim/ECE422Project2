@@ -327,17 +327,17 @@ public class Server extends Thread{
     	}catch(Exception e){
     		e.printStackTrace();
     	}
-    	System.out.println("length of file to send"); // debug
-    	System.out.println(numBytesToSend); // debug
-    	System.out.println("file bytes"); // debug
-    	System.out.println(Arrays.toString(fileByteArray)); // debug
+//    	System.out.println("length of file to send"); // debug
+//    	System.out.println(numBytesToSend); // debug
+//    	System.out.println("file bytes"); // debug
+//    	System.out.println(Arrays.toString(fileByteArray)); // debug
     	
     	// encrypt the file 
     	byte[] encryptedFileByteArray = encryptTEA.encrypt(fileByteArray, TEAkey);
     	try{
-			System.out.println("waiting..."); // debug
+			//System.out.println("waiting..."); // debug
 			TimeUnit.SECONDS.sleep(1);
-			System.out.println("done waiting");
+			//System.out.println("done waiting");
     		outputStream.write(encryptedFileByteArray,0,numBytesToSend);
     		System.out.println("file sent");
     	}catch(Exception e){
@@ -415,9 +415,9 @@ public class Server extends Thread{
 		System.out.println("Test message: " + s + "|");
         
 		String logInOption = readString(inStream,input);
-		System.out.println("Log in option: " + logInOption + "|");
+		//System.out.println("Log in option: " + logInOption + "|");
 		if(logInOption.equals(SIGNUP)){
-			System.out.println("User signing up");
+			System.out.println("User is signing up");
 			
 			String userName = readString(inStream,input);
 			String password = readString(inStream,input);
@@ -473,7 +473,7 @@ public class Server extends Thread{
 		            	
 		            }
 		        } 
-		        System.out.println("exited while loop"); // debug 
+		        //System.out.println("exited while loop"); // debug 
 			}else{
 				System.out.println("Invalid credentials");
 				output.println(ACCESSDENIED);

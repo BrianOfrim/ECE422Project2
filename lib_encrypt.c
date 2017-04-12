@@ -6,7 +6,7 @@
 void encrypt (int *v, int *k);
 JNIEXPORT jbyteArray JNICALL Java_Encryption_encrypt
 (JNIEnv *env, jobject object, jbyteArray data, jbyteArray key){
-	printf("Entered the c function\n");
+	//printf("Entered the c function\n");
 	jsize lenData;
 	jsize lenKey;
 	jbyte *myCopyData;
